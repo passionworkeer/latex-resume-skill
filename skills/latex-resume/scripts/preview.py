@@ -19,14 +19,19 @@ import webbrowser
 
 SKILL = Path(__file__).resolve().parents[1]
 MAX_SOURCE = 200_000
+# JSON may expand a source byte to six bytes (for example, a control escape).
+MAX_REQUEST = MAX_SOURCE * 6 + 2000
 BUILD_TIMEOUT = 600
 IS_WINDOWS = os.name == 'nt'
 
 
 def run_compile(command, timeout=BUILD_TIMEOUT):
     """Bound the entire compiler process tree, including TeX grandchildren."""
+    environment = os.environ.copy()
+    environment['PYTHONIOENCODING'] = 'utf-8'
     process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                               text=True, start_new_session=not IS_WINDOWS)
+                               encoding='utf-8', errors='replace', env=environment,
+                               start_new_session=not IS_WINDOWS)
     try:
         stdout, stderr = process.communicate(timeout=timeout)
     except subprocess.TimeoutExpired:
@@ -194,7 +199,7 @@ class EditorHandler(BaseHTTPRequestHandler):
             return
         try:
             length = int(self.headers.get('Content-Length', '0'))
-            if length < 1 or length > MAX_SOURCE + 2000:
+            if length < 1 or length > MAX_REQUEST:
                 raise ValueError('Request is too large or empty')
             data = json.loads(self.rfile.read(length))
             source, pages, revision = data['source'], data['pages'], data['revision']

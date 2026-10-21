@@ -60,12 +60,12 @@ class PreviewTests(unittest.TestCase):
         session = json.loads(body)
         self.assertEqual(status, 200)
         self.assertEqual(session['token'], self.state.token)
-        self.assertEqual(session['source'], self.state.draft.read_text())
+        self.assertEqual(session['source'], self.state.draft.read_text(encoding='utf-8'))
         self.assertEqual(headers['Cache-Control'], 'no-store')
         status, headers, body = self.request(path='/api/draft')
         self.assertEqual(status, 200)
         self.assertIn('attachment', headers['Content-Disposition'])
-        self.assertEqual(body.decode(), session['source'])
+        self.assertEqual(body, self.state.draft.read_bytes())
 
     def test_foreign_host_origin_and_invalid_token_are_denied(self):
         for headers in [{'Host': 'attacker.example'}, {'Origin': 'https://attacker.example'}, {'Origin': 'null'}]:
@@ -94,7 +94,7 @@ class PreviewTests(unittest.TestCase):
         compile_mock.assert_called_once_with('# 测试\n## 经历\n- 新内容', 1, 7)
 
     def test_compile_error_preserves_new_and_previous_drafts(self):
-        previous = self.state.draft.read_text()
+        previous = self.state.draft.read_text(encoding='utf-8')
         with patch.object(preview, 'run_compile', return_value=subprocess.CompletedProcess([], 1, 'bad syntax', '')):
             status, _, body = self.build(source='# invalid **')
         result = json.loads(body)
@@ -104,8 +104,8 @@ class PreviewTests(unittest.TestCase):
         self.assertIsNone(result['pdf_url'])
         self.assertEqual(result['revision'], 7)
         self.assertIn('bad syntax', result['log'])
-        self.assertEqual(self.state.draft.read_text(), '# invalid **')
-        self.assertEqual((self.workspace / 'resume.previous.md').read_text(), previous)
+        self.assertEqual(self.state.draft.read_text(encoding='utf-8'), '# invalid **')
+        self.assertEqual((self.workspace / 'resume.previous.md').read_text(encoding='utf-8'), previous)
 
     def test_verified_compile_returns_only_matching_build_artifacts(self):
         def fake_compile(command, **kwargs):
@@ -132,9 +132,14 @@ class PreviewTests(unittest.TestCase):
             status, _, body = self.build(source='# timeout draft')
         self.assertEqual(status, 400)
         self.assertTrue(json.loads(body)['source_saved'])
-        self.assertEqual(self.state.draft.read_text(), '# timeout draft')
+        self.assertEqual(self.state.draft.read_text(encoding='utf-8'), '# timeout draft')
         self.assertFalse(self.state.lock.locked())
 
+
+    def test_compiler_output_uses_utf8(self):
+        result = preview.run_compile([sys.executable, '-c', "print('中文诊断')"], timeout=30)
+        self.assertEqual(result.stdout.strip(), '中文诊断')
+        self.assertEqual(result.returncode, 0)
 
     def test_windows_timeout_kills_process_tree(self):
         process = Mock(pid=123)
@@ -161,7 +166,7 @@ class PreviewTests(unittest.TestCase):
         with self.assertRaises(subprocess.TimeoutExpired):
             preview.run_compile([sys.executable, '-c', parent], timeout=10)
         self.assertTrue(pidfile.exists())
-        pid = int(pidfile.read_text())
+        pid = int(pidfile.read_text(encoding='utf-8'))
         # A killed child may briefly remain a zombie until init reaps it.
         for _ in range(30):
             result = subprocess.run(['ps', '-o', 'stat=', '-p', str(pid)], capture_output=True, text=True)
@@ -191,14 +196,14 @@ class PreviewTests(unittest.TestCase):
     def test_workspace_resume_and_conflicting_import(self):
         self.state.draft.write_text('# persisted draft')
         resumed = preview.EditorState(self.workspace)
-        self.assertEqual(resumed.draft.read_text(), '# persisted draft')
+        self.assertEqual(resumed.draft.read_text(encoding='utf-8'), '# persisted draft')
         incoming = Path(self.temp.name) / 'incoming.md'
         incoming.write_text('# conflicting source')
         with self.assertRaisesRegex(ValueError, 'different draft'):
             preview.EditorState(self.workspace, incoming)
-        self.assertEqual(self.state.draft.read_text(), '# persisted draft')
+        self.assertEqual(self.state.draft.read_text(encoding='utf-8'), '# persisted draft')
         incoming.write_text('# persisted draft')
-        self.assertEqual(preview.EditorState(self.workspace, incoming).draft.read_text(), '# persisted draft')
+        self.assertEqual(preview.EditorState(self.workspace, incoming).draft.read_text(encoding='utf-8'), '# persisted draft')
 
 
 if __name__ == '__main__':
