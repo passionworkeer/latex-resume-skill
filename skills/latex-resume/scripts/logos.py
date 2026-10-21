@@ -11,7 +11,17 @@ TOKEN = re.compile(r'!\[logo:([a-z0-9][a-z0-9-]{0,63})\]')
 
 def catalogue():
     data = json.loads((DIRECTORY / 'manifest.json').read_text(encoding='utf-8'))
-    items = data['icons']
+    items = list(data['icons'])
+    if (DIRECTORY / 'local').is_symlink():
+        raise ValueError('Local logo directory cannot be a symlink')
+    local_manifest = DIRECTORY / 'local/manifest.json'
+    if local_manifest.exists():
+        if local_manifest.is_symlink():
+            raise ValueError('Local logo manifest cannot be a symlink')
+        local_items = json.loads(local_manifest.read_text(encoding='utf-8'))['icons']
+        for entry in local_items:
+            entry['local'] = True
+        items.extend(local_items)
     result = {}
     for item in items:
         slug, filename = item['id'], item['file']
@@ -19,6 +29,22 @@ def catalogue():
             raise ValueError('Invalid logo catalogue entry')
         result[slug] = item
     return result
+
+
+def resolve_logo_path(filename):
+    """Resolve only registered filenames, without following paths outside the catalogue."""
+    for item in catalogue().values():
+        if item['file'] == filename:
+            directory = DIRECTORY / 'local' if item.get('local') else DIRECTORY
+            path = directory / filename
+            if directory.is_symlink() or path.is_symlink() or path.resolve().parent != directory.resolve():
+                raise ValueError('Logo path escapes its catalogue')
+            raw = path.read_bytes()
+            if hashlib.sha256(raw).hexdigest() != item['sha256']:
+                raise ValueError('Logo checksum mismatch')
+            validate_svg(raw)
+            return path
+    raise ValueError('Unknown logo file')
 
 
 def validate_svg(data):
@@ -50,7 +76,7 @@ def prepare(slugs, output):
         if slug not in entries:
             raise ValueError(f'Unknown logo: {slug}; see references/logos.md')
         item = entries[slug]
-        data = (DIRECTORY / item['file']).read_bytes()
+        data = resolve_logo_path(item['file']).read_bytes()
         if hashlib.sha256(data).hexdigest() != item['sha256']:
             raise ValueError(f'Logo checksum mismatch: {slug}')
         validate_svg(data)

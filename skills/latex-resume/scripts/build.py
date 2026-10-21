@@ -10,6 +10,9 @@ import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
+# Support both CLI execution and file-based imports used by embedders/tests.
+if str(ROOT / 'scripts') not in sys.path:
+    sys.path.insert(0, str(ROOT / 'scripts'))
 
 
 def escape(text):
@@ -65,7 +68,9 @@ def validate_font_size(value):
     return float(value)
 
 
-def convert(source, font_size=10.5):
+def convert(source, font_size=10.5, template_id='classic'):
+    from templates import get_template
+    selected_template = get_template(template_id)
     font_size = validate_font_size(font_size)
     body, expected = [], []
     in_list = False
@@ -124,7 +129,19 @@ def convert(source, font_size=10.5):
         raise ValueError('Start with # Name')
     if in_list:
         body.append(r'\end{itemize}')
-    template = (ROOT / 'assets/templates/resume.tex').read_text(encoding='utf-8')
+    template = (ROOT / 'assets/templates' / selected_template['filename']).read_text(encoding='utf-8')
+    if template_id == 'two-column':
+        first_section = next((i for i, line in enumerate(body) if line.startswith(r'\section{')), len(body))
+        if first_section < len(body):
+            # Prefer a section boundary over splitting a heading across balanced columns.
+            boundaries = [i for i in range(first_section + 1, len(body)) if body[i].startswith(r'\section{')]
+            if boundaries:
+                weights = [len(re.sub(r'\\[A-Za-z]+|[{}]', '', line)) for line in body]
+                total = sum(weights[first_section:])
+                split = min(boundaries, key=lambda i: abs(sum(weights[first_section:i]) - total / 2))
+                body.insert(split, r'\columnbreak')
+            body.insert(first_section, r'\begin{multicols}{2}')
+            body.append(r'\end{multicols}')
     return template.replace('%%FONT_SIZE%%', f'{font_size:g}').replace('%%LINE_HEIGHT%%', f'{font_size * (13.8 / 10.5):.2f}'.rstrip('0').rstrip('.')).replace('%%BODY%%', '\n'.join(body)), '\n'.join(expected) + '\n'
 
 
@@ -161,6 +178,8 @@ def main():
     parser.add_argument('--engine', choices=['auto', 'tectonic', 'xelatex'], default='auto')
     parser.add_argument('--pages', type=int, default=1)
     parser.add_argument('--font-size', type=float, default=10.5)
+    from templates import catalogue
+    parser.add_argument('--template', choices=[item['id'] for item in catalogue()], default='classic')
     parser.add_argument('--only-cached', action='store_true', help='Use only cached Tectonic resources')
     parser.add_argument('--bundle', default='https://data1b.fullyjustified.net/tlextras-2022.0r0.tar', help='Tectonic resource bundle URL or path')
     args = parser.parse_args()
@@ -173,7 +192,7 @@ def main():
         raise ValueError('--pages must be positive')
     out.mkdir(parents=True, exist_ok=True)
     clear_previous_results(out, source_path)
-    tex, expected = convert(args.source.read_text(encoding='utf-8'), args.font_size)
+    tex, expected = convert(args.source.read_text(encoding='utf-8'), args.font_size, args.template)
     (out / 'resume.tex').write_text(tex, encoding='utf-8')
     (out / 'expected-text.txt').write_text(expected, encoding='utf-8')
     fonts = ROOT / 'assets/fonts'
@@ -181,7 +200,9 @@ def main():
         if not (fonts / name).is_file():
             raise RuntimeError('Missing fonts; run setup first: ' + str(fonts / name))
     shutil.copytree(fonts, out / 'fonts', dirs_exist_ok=True)
-    shutil.copyfile(ROOT / 'assets/templates/LICENSE.txt', out / 'TEMPLATE-LICENSE.txt')
+    license_name = {'classic': 'LICENSE.txt', 'minimal': 'LICENSE.sb2nov.txt', 'two-column': 'LICENSE.latexcv.txt'}[args.template]
+    license_paths = ['LICENSE.txt'] if args.template == 'classic' else ['LICENSE.txt', license_name]
+    (out / 'TEMPLATE-LICENSE.txt').write_text('\n\n'.join((ROOT / 'assets/templates' / name).read_text(encoding='utf-8') for name in license_paths), encoding='utf-8')
     from logos import TOKEN, prepare
     prepare(TOKEN.findall(args.source.read_text(encoding='utf-8')), out)
     engine, executable = select_engine(args.engine)

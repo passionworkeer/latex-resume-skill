@@ -3,9 +3,9 @@ import zh from 'bytemd/locales/zh_Hans.json';
 import 'bytemd/dist/index.css';
 import { currentArtifact, validSettings } from './state.js';
 const $ = id => document.getElementById(id);
-let editor, cm, token='', value='', revision=0, saved=-1, rendered=-1, busy=false, last=null, timer, ticker, started=0, logos=[], sourceName='resume.md';
+let editor, cm, token='', value='', revision=0, saved=-1, rendered=-1, busy=false, last=null, timer, ticker, started=0, logos=[], templates=[], templateId='classic', sourceName='resume.md';
 function error(message, log='') { $('error-box').hidden=false; $('error-message').textContent=message; $('error-log').textContent=log; }
-function current() { return currentArtifact({revision,rendered,busy,last}); }
+function current() { return currentArtifact({revision,rendered,busy,last,templateId}); }
 function status() {
   $('save-state').textContent=saved===revision?'已保存到本机':'修改待保存';
   $('preview-state').textContent=busy?`正在排版 · ${Math.floor((performance.now()-started)/1000)} 秒`:current()?'已同步':last?'预览待更新':'等待排版';
@@ -26,7 +26,7 @@ function showPages(result) {
 }
 async function sync() {
  clearTimeout(timer);if(!token||busy)return;
- const settings={pages:Number($('pages').value),font_size:Number($('font-size').value)};
+ const settings={pages:Number($('pages').value),font_size:Number($('font-size').value),template_id:templateId};
  if(!validSettings(settings)) {error('页数需为 1–20 的整数，字号需为 9–12 pt，步进 0.5。');return;}
  const requested=revision, snapshot=value; busy=true;rendered=-1;started=performance.now();ticker=setInterval(status,1000);$('error-box').hidden=true;status();
  try {
@@ -35,7 +35,7 @@ async function sync() {
   if(!response.ok||!result.ok)throw Object.assign(new Error(result.error||'排版未通过'),{log:result.log||''});
   if(requested!==revision)return;
   if(!snapshot.trim()) {$('preview-host').replaceChildren();$('page-count').textContent='';last=null;rendered=-1;return;}
-  if(!result.previews?.length||!result.pdf_url||result.revision!==requested)throw new Error('未收到对应版本的完整预览，请重新生成。');
+  if(!result.previews?.length||!result.pdf_url||result.revision!==requested||result.template_id!==settings.template_id)throw new Error('未收到对应内容和模板的完整预览，请重新生成。');
   last=result;rendered=requested;showPages(result);
  } catch(e) {if(requested===revision)error(e.message,e.log||'');}
  finally {busy=false;clearInterval(ticker);status();if(requested!==revision)timer=setTimeout(sync,150);}
@@ -46,6 +46,23 @@ $('export-pdf').onclick=()=>{if(current())download(last.pdf_url,'resume.pdf');};
 $('export-png').onclick=()=>{if(current())download(last.previews.length===1?last.previews[0]+'?download=1':`/builds/${last.build_id}/previews.zip`,last.previews.length===1?'resume.png':'resume-previews.zip');};
 $('build-button').onclick=sync;
 $('pages').oninput=changed;$('font-size').onchange=changed;$('zoom').onchange=scale;
+function renderTemplates() {
+ const fragment=document.createDocumentFragment();
+ templates.forEach(template=>{
+  const card=document.createElement('button'),img=document.createElement('img'),name=document.createElement('strong'),description=document.createElement('span'),badge=document.createElement('span');
+  card.className='template-card';card.type='button';card.setAttribute('aria-pressed',String(template.id===templateId));
+  img.src='/assets/templates/thumbnails/'+encodeURIComponent(template.thumbnail);img.alt=template.name+'模板缩略图';
+  name.textContent=template.name;description.textContent=template.description;badge.textContent=template.id===templateId?'当前模板':'使用此模板';badge.className='template-badge';
+  card.append(img,name,description,badge);
+  card.onclick=()=>{if(template.id!==templateId){templateId=template.id;renderTemplates();changed();}$('template-dialog').close();};
+  fragment.append(card);
+ });
+ $('template-grid').replaceChildren(fragment);
+ $('template-name').textContent=templates.find(t=>t.id===templateId)?.name||templateId;
+}
+$('template-button').onclick=()=>$('template-dialog').showModal();
+$('template-close').onclick=()=>$('template-dialog').close();
+$('template-dialog').onclick=event=>{if(event.target===$('template-dialog')){const box=event.target.getBoundingClientRect();if(event.clientX<box.left||event.clientX>box.right||event.clientY<box.top||event.clientY>box.bottom)event.target.close();}};
 $('open-button').onclick=()=>$('file-input').click();
 $('file-input').onchange=async event=>{const file=event.target.files[0];if(!file||!editor)return;try{if(file.size>200000)throw new Error('文件超过 200 KB，请精简后导入。');const text=await file.text();sourceName=file.name;$('source-name').textContent=sourceName;value=text;editor.$set({value});changed();}catch(e){error(e.message);}event.target.value='';};
 function renderLogos() {
@@ -62,11 +79,12 @@ document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='Ente
 (async()=>{
  try {
   const response=await fetch('/api/session');if(!response.ok)throw new Error('无法连接本机编辑服务');const session=await response.json();
-  token=session.token;value=session.source;sourceName=session.source_name;logos=session.logos||[];saved=revision;
+  token=session.token;value=session.source;sourceName=session.source_name;logos=session.logos||[];templates=session.templates||[];templateId=session.template_id||'classic';saved=revision;
+  if(!templates.some(t=>t.id===templateId))throw new Error('模板目录与当前设置不匹配，请重启本机编辑服务。');
   $('source-name').textContent=sourceName;$('pages').value=session.default_pages||1;$('font-size').value=session.font_size||10.5;
   editor=new Editor({target:$('editor-host'),props:{value,locale:zh,mode:'tab',previewDebounce:0,maxLength:200000,plugins:[{editorEffect({editor:instance}){cm=instance;}}],editorConfig:{lineWrapping:true,screenReaderLabel:'简历 Markdown 内容'},overridePreview(){}}});
   editor.$on('change',({detail})=>{if(value===detail.value)return;value=detail.value;editor.$set({value});changed();});
-  for(const id of ['open-button','download-source','bold-button','undo-button','redo-button'])$(id).disabled=false;
-  renderLogos();status();sync();
+  for(const id of ['open-button','download-source','bold-button','undo-button','redo-button','template-button'])$(id).disabled=false;
+  renderTemplates();renderLogos();status();sync();
  }catch(e){error(e.message);$('save-state').textContent='连接失败';}
 })();

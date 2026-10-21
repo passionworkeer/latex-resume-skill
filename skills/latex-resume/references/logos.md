@@ -29,3 +29,22 @@ Use a manifest ID supported by the generator/editor, for example `![logo:bytedan
 For a missing brand, first look for current official brand resources and explicit redistribution and use terms. A GitHub repository's license must actually cover the artwork; a repository-wide MIT badge or a copied logo alone does not establish brand-owner permission. Check per-icon exceptions and removal history. Do not recover a removed logo from old releases merely to bypass the current upstream policy. Prefer a separately supplied, authorized local SVG or a text-only heading when rights are unclear. User-supplied assets stay in that user's project unless redistribution authorization is also supplied.
 
 To update this catalogue, pin a new upstream commit, preserve its applicable license/disclaimer, inspect each selected metadata record and current brand rules, copy the SVG bytes unchanged, update SHA-256 values, and revalidate the SVG allowlist. Document provenance rather than downloading assets during resume builds. Do not silently fetch an unknown ID from a CDN.
+
+## Chinese university logos (optional local download)
+
+The public `university_sources` directory in `assets/logos/manifest.json` records 20 Chinese schools, including BUPT, PKU, THU, FDU, SJTU, ZJU, USTC, NJU, HIT, XJTU, WHU, HUST, BNU, RUC, NKU, TJU, SCU, SYSU, XDU and SZU. Each record has an official website/VIS lead, a pinned GitHub SVG URL and SHA-256, plus a separate rights status. University artwork is not bundled in Git. The public directory is discovery metadata; builds never download artwork.
+
+Run explicitly from the repository root:
+
+```sh
+.venv/bin/python skills/latex-resume/scripts/fetch_school_logos.py --school bupt
+.venv/bin/python skills/latex-resume/scripts/fetch_school_logos.py --all
+```
+
+The downloader checks the pinned hash and existing SVG allowlist, then stores permitted SVG structures in ignored `assets/logos/local/`, with a local manifest preserving source, source/output hashes, transformations and rights notices. It can expand plain presentation style declarations into equivalent attributes without changing paths or colors; unsupported CSS, DTDs, links, active content and unsupported elements remain rejected. `--all` reports rejected candidates individually. Local entries appear in the editor and support headings such as `![logo:bupt] 北京邮电大学`; keeping the written school name preserves accessibility and text extraction. No private resume is inspected by the downloader.
+
+[BUPT’s official VIS](https://vi.bupt.edu.cn/) and [校徽规范](https://vi.bupt.edu.cn/jcxt/xhgf.htm) specify artwork, colors, clear space, backgrounds and prohibited forms. The optional BUPT SVG comes from [Magicdover/China-Universities-2026 at commit 419bdc7ce6956fc88c2b70b3979f170b6666f111](https://github.com/Magicdover/China-Universities-2026/tree/419bdc7ce6956fc88c2b70b3979f170b6666f111/assets/logos-new); the source bytes and converted attributes are recorded locally. This is a third-party vector rendition, not a claim of an official university-issued file. Its README’s MIT statement is not treated as a school-owner artwork or trademark grant. No broad redistribution grant was verified; use the local asset under the institution’s rules, obtain authorization for the intended context where required, and do not imply endorsement. Local download authorization does not permit publishing these assets with the skill.
+
+Other investigated GitHub leads are [cnlogo](https://github.com/yuxtech/cnlogo) (real school vector TikZ; its [pinned license](https://github.com/yuxtech/cnlogo/blob/cdf5ece24f2a866f6f811880b0a477cb54371ee3/LICENSE) excludes logos), [china_school_badge](https://github.com/lovefc/china_school_badge) (Apache badge plus additional README restrictions), and [university_logos](https://github.com/RoboMaster/university_logos) (school copyright retained). None establishes an unrestricted school-owner grant. [This VIS index](https://github.com/wanzhenchn/Visual_Identity_System_Chinese_University) helps find official materials; only BUPT’s specific VIS endpoint was verified live in this review. The local software’s MIT license does not relicense linked university marks.
+
+Delivered resume output includes any locally used SVG/PDF and `SOURCES.json` for the user’s private use. Check the applicable institution rules before publishing or sharing that output; keep downloaded local artwork out of the public skill repository.

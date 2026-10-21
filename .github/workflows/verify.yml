@@ -33,8 +33,11 @@ jobs:
         run: |
           if [ "$RUNNER_OS" = Windows ]; then PY=.venv/Scripts/python.exe; else PY=.venv/bin/python; fi
           "$PY" -m unittest discover -s tests -v
-          "$PY" skills/latex-resume/scripts/build.py --source skills/latex-resume/assets/templates/example-zh.md --output output/example-zh
-          "$PY" skills/latex-resume/scripts/build.py --source skills/latex-resume/assets/templates/example-en.md --output output/example-en
+          for TEMPLATE in classic minimal two-column; do
+            for LANG in zh en; do
+              "$PY" skills/latex-resume/scripts/build.py --source "skills/latex-resume/assets/templates/example-$LANG.md" --template "$TEMPLATE" --output "output/$TEMPLATE-$LANG"
+            done
+          done
           "$PY" skills/latex-resume/scripts/build.py --source skills/latex-resume/assets/templates/example-logos.md --output output/example-logos
       - uses: actions/upload-artifact@v4
         if: always()

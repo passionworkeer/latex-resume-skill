@@ -1,0 +1,170 @@
+[
+  {
+    "exact_text_match": true,
+    "expected_characters": 743,
+    "actual_characters": 743,
+    "differences": [],
+    "pdf_sha256": "970e8bd6ba632392e910f3073b9b66ed984c9e7bcb4e6bdef18a6ffed7ee864b",
+    "expected_text_sha256": "394dca76601a38b5fe6e337cd1fc21580eee285dea13d29912b593fe0a434c3e",
+    "log_sha256": "4e7f9608589fd9aa18590c04d750cf0ca25565bf59c68de592a83f13f7dcea1f",
+    "page_count": 1,
+    "expected_pages": 1,
+    "page_sizes": [
+      {
+        "page": 1,
+        "width_pt": 595.28,
+        "height_pt": 841.89
+      }
+    ],
+    "out_of_page_glyphs": [],
+    "font_and_overflow_warnings": [],
+    "log_checked": true,
+    "visual_check_required": true,
+    "visual_status": "PENDING: inspect every rendered page before delivery",
+    "passed": true,
+    "template_id": "classic",
+    "language": "zh",
+    "source_sha256": "d634d409c6b2e97876bf265cca69c44b794cbb1b17705252bab8c77a73da4cce",
+    "visual_review": "passed: all final rendered pages inspected by template agent"
+  },
+  {
+    "exact_text_match": true,
+    "expected_characters": 789,
+    "actual_characters": 789,
+    "differences": [],
+    "pdf_sha256": "e6d9af32c7a54e7dabc9c1c0e3e1112d4940c9016c6ed916558a964e18e0d590",
+    "expected_text_sha256": "5e6935e26a822e62e815af384008a76b5807264c9fa6b27d2d3d0093eb5c8efa",
+    "log_sha256": "aa9e9bd184fe7fddfb8a42e44e4e7efbcf827e013408ef99658bbd2b17e865d5",
+    "page_count": 1,
+    "expected_pages": 1,
+    "page_sizes": [
+      {
+        "page": 1,
+        "width_pt": 595.28,
+        "height_pt": 841.89
+      }
+    ],
+    "out_of_page_glyphs": [],
+    "font_and_overflow_warnings": [],
+    "log_checked": true,
+    "visual_check_required": true,
+    "visual_status": "PENDING: inspect every rendered page before delivery",
+    "passed": true,
+    "template_id": "classic",
+    "language": "en",
+    "source_sha256": "cbf2256c3aaa7d4820f8c35cd8808e43db0b33bcf527272c44f0d943001f60db",
+    "visual_review": "passed: all final rendered pages inspected by template agent"
+  },
+  {
+    "exact_text_match": true,
+    "expected_characters": 743,
+    "actual_characters": 743,
+    "differences": [],
+    "pdf_sha256": "be639781de4ec90587021ba8bc82e62fe4c146175782790db3d1bf7659a8da62",
+    "expected_text_sha256": "394dca76601a38b5fe6e337cd1fc21580eee285dea13d29912b593fe0a434c3e",
+    "log_sha256": "3addfb592c60ff50948e94caf3b73c52a07d0c847dad31af460a04ae64de1a4b",
+    "page_count": 1,
+    "expected_pages": 1,
+    "page_sizes": [
+      {
+        "page": 1,
+        "width_pt": 595.28,
+        "height_pt": 841.89
+      }
+    ],
+    "out_of_page_glyphs": [],
+    "font_and_overflow_warnings": [],
+    "log_checked": true,
+    "visual_check_required": true,
+    "visual_status": "PENDING: inspect every rendered page before delivery",
+    "passed": true,
+    "template_id": "minimal",
+    "language": "zh",
+    "source_sha256": "d634d409c6b2e97876bf265cca69c44b794cbb1b17705252bab8c77a73da4cce",
+    "visual_review": "passed: all final rendered pages inspected by template agent"
+  },
+  {
+    "exact_text_match": true,
+    "expected_characters": 789,
+    "actual_characters": 789,
+    "differences": [],
+    "pdf_sha256": "82f2180667ec9272df8b89b8bdb8689daf3e5cc58b91978e14364416246f5049",
+    "expected_text_sha256": "5e6935e26a822e62e815af384008a76b5807264c9fa6b27d2d3d0093eb5c8efa",
+    "log_sha256": "e13057fa4db7ce89c1ae886bb8d5c817af8b2be78e434967f04a8e30d927802d",
+    "page_count": 1,
+    "expected_pages": 1,
+    "page_sizes": [
+      {
+        "page": 1,
+        "width_pt": 595.28,
+        "height_pt": 841.89
+      }
+    ],
+    "out_of_page_glyphs": [],
+    "font_and_overflow_warnings": [],
+    "log_checked": true,
+    "visual_check_required": true,
+    "visual_status": "PENDING: inspect every rendered page before delivery",
+    "passed": true,
+    "template_id": "minimal",
+    "language": "en",
+    "source_sha256": "cbf2256c3aaa7d4820f8c35cd8808e43db0b33bcf527272c44f0d943001f60db",
+    "visual_review": "passed: all final rendered pages inspected by template agent"
+  },
+  {
+    "exact_text_match": true,
+    "expected_characters": 743,
+    "actual_characters": 743,
+    "differences": [],
+    "pdf_sha256": "5afbb3ad8b18850f451abd6ec689d1161bafc4f3a55d13ece919358a95de009a",
+    "expected_text_sha256": "394dca76601a38b5fe6e337cd1fc21580eee285dea13d29912b593fe0a434c3e",
+    "log_sha256": "6af3acbcf42e658d7a9d088d994095ea5915e507cfb60a292237278c6c13d92b",
+    "page_count": 1,
+    "expected_pages": 1,
+    "page_sizes": [
+      {
+        "page": 1,
+        "width_pt": 595.28,
+        "height_pt": 841.89
+      }
+    ],
+    "out_of_page_glyphs": [],
+    "font_and_overflow_warnings": [],
+    "log_checked": true,
+    "visual_check_required": true,
+    "visual_status": "PENDING: inspect every rendered page before delivery",
+    "passed": true,
+    "template_id": "two-column",
+    "language": "zh",
+    "source_sha256": "d634d409c6b2e97876bf265cca69c44b794cbb1b17705252bab8c77a73da4cce",
+    "visual_review": "passed: all final rendered pages inspected by template agent"
+  },
+  {
+    "exact_text_match": true,
+    "expected_characters": 789,
+    "actual_characters": 789,
+    "differences": [],
+    "pdf_sha256": "04184eebf9503b9c9b4f0781ee783e8e69b26bb4126cd4d27e63cc297490fe57",
+    "expected_text_sha256": "5e6935e26a822e62e815af384008a76b5807264c9fa6b27d2d3d0093eb5c8efa",
+    "log_sha256": "8956a81b4edd01dec7bbce2b1a9fd9538e22e6ea1333a0bc1b04ae91fef60c16",
+    "page_count": 1,
+    "expected_pages": 1,
+    "page_sizes": [
+      {
+        "page": 1,
+        "width_pt": 595.28,
+        "height_pt": 841.89
+      }
+    ],
+    "out_of_page_glyphs": [],
+    "font_and_overflow_warnings": [],
+    "log_checked": true,
+    "visual_check_required": true,
+    "visual_status": "PENDING: inspect every rendered page before delivery",
+    "passed": true,
+    "template_id": "two-column",
+    "language": "en",
+    "source_sha256": "cbf2256c3aaa7d4820f8c35cd8808e43db0b33bcf527272c44f0d943001f60db",
+    "visual_review": "passed: all final rendered pages inspected by template agent"
+  }
+]

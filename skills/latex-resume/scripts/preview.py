@@ -20,11 +20,22 @@ from urllib.parse import urlsplit, parse_qs
 import uuid
 import webbrowser
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from templates import catalogue, get_template
+import logos as logo_assets
+
 SKILL = Path(__file__).resolve().parents[1]
 MAX_SOURCE = 200_000
 # JSON may expand a source byte to six bytes (for example, a control escape).
 MAX_REQUEST = MAX_SOURCE * 6 + 2000
 BUILD_TIMEOUT = 600
+
+
+def validate_template_id(value):
+    if not isinstance(value, str):
+        raise ValueError('Invalid template ID')
+    get_template(value)
+    return value
 
 
 def validate_font_size(value):
@@ -82,11 +93,12 @@ class EditorState:
         elif not self.draft.exists():
             shutil.copyfile(SKILL / 'assets/templates/example-zh.md', self.draft)
         self.settings_file = self.workspace / 'editor-settings.json'
-        self.pages, self.font_size = pages, 10.5
+        self.pages, self.font_size, self.template_id = pages, 10.5, 'classic'
         if self.settings_file.exists():
             settings = json.loads(self.settings_file.read_text(encoding='utf-8'))
             self.pages = validate_pages(settings['pages'])
             self.font_size = validate_font_size(settings['font_size'])
+            self.template_id = validate_template_id(settings.get('template_id', 'classic'))
         self.python = python or sys.executable
         self.token = secrets.token_urlsafe(32)
         self.lock = threading.Lock()
@@ -94,16 +106,13 @@ class EditorState:
         self.builds.mkdir(exist_ok=True)
 
     def logos(self):
-        path = SKILL / 'assets/logos/manifest.json'
-        if not path.is_file():
-            return []
-        data = json.loads(path.read_text(encoding='utf-8'))
-        return data if isinstance(data, list) else data.get('logos', data.get('icons', []))
+        return list(logo_assets.catalogue().values())
 
-    def save(self, source, revision, pages=None, font_size=None):
+    def save(self, source, revision, pages=None, font_size=None, template_id=None):
         """Atomically save a draft; the caller holds the shared save/build lock."""
         settings = {'pages': self.pages if pages is None else validate_pages(pages),
-                    'font_size': self.font_size if font_size is None else validate_font_size(font_size)}
+                    'font_size': self.font_size if font_size is None else validate_font_size(font_size),
+                    'template_id': validate_template_id(self.template_id if template_id is None else template_id)}
         if self.draft.exists():
             shutil.copyfile(self.draft, self.workspace / 'resume.previous.md')
         temporary = self.workspace / 'resume.md.tmp'
@@ -112,19 +121,19 @@ class EditorState:
         settings_tmp = self.settings_file.with_suffix('.json.tmp')
         settings_tmp.write_text(json.dumps(settings), encoding='utf-8')
         settings_tmp.replace(self.settings_file)
-        self.pages, self.font_size = settings['pages'], settings['font_size']
+        self.pages, self.font_size, self.template_id = settings['pages'], settings['font_size'], settings['template_id']
         return {'ok': True, 'source_saved': True, 'revision': revision}
 
-    def compile(self, source, pages, revision, font_size=10.5):
+    def compile(self, source, pages, revision, font_size=10.5, template_id='classic'):
         # Save user edits before compilation, including drafts that have syntax errors.
-        self.save(source, revision, pages, font_size)
+        self.save(source, revision, pages, font_size, template_id)
         build_id = uuid.uuid4().hex
         output = self.builds / build_id
         snapshots = self.workspace / 'snapshots'
         snapshots.mkdir(exist_ok=True)
         snapshot = snapshots / (build_id + '.md')
         snapshot.write_bytes(source.encode('utf-8'))
-        command = [self.python, str(SKILL / 'scripts/build.py'), '--source', str(snapshot), '--output', str(output), '--pages', str(pages), '--font-size', str(font_size)]
+        command = [self.python, str(SKILL / 'scripts/build.py'), '--source', str(snapshot), '--output', str(output), '--pages', str(pages), '--font-size', str(font_size), '--template', template_id]
         try:
             process = run_compile(command + ['--only-cached'])
             if process.returncode:
@@ -137,13 +146,13 @@ class EditorState:
                 if missing_cache:
                     process = run_compile(command)
         except subprocess.TimeoutExpired:
-            return {'ok': False, 'revision': revision, 'build_id': build_id, 'source_saved': True,
+            return {'ok': False, 'revision': revision, 'build_id': build_id, 'source_saved': True, 'template_id': template_id,
                     'error': '编译超过 600 秒，已停止本次编译进程，草稿已保存。首次生成可能需要几分钟下载排版资源；请先在终端完成 setup.py 和样例编译，再重试。'}
         report_file = output / 'verification.json'
         report = json.loads(report_file.read_text(encoding='utf-8')) if report_file.exists() else {}
         success = process.returncode == 0 and report.get('passed') is True
         previews = sorted(output.glob('preview-*.png'), key=lambda path: int(path.stem.split('-')[-1]))
-        result = {'ok': success, 'revision': revision, 'build_id': build_id, 'source_saved': True,
+        result = {'ok': success, 'revision': revision, 'build_id': build_id, 'source_saved': True, 'template_id': template_id,
                   'report': report, 'previews': [f'/builds/{build_id}/{p.name}' for p in previews],
                   'pdf_url': f'/builds/{build_id}/resume.pdf' if success else None}
         # Absolute local paths are not needed by the viewer.
@@ -208,20 +217,31 @@ class EditorHandler(BaseHTTPRequestHandler):
         path = urlsplit(self.path).path
         if path == '/api/session':
             self.send_json(200, {'token': self.state.token, 'source': self.state.draft.read_text(encoding='utf-8'),
-                                 'source_name': 'resume.md', 'default_pages': self.state.pages, 'font_size': self.state.font_size, 'logos': self.state.logos()})
+                                 'source_name': 'resume.md', 'default_pages': self.state.pages, 'font_size': self.state.font_size, 'logos': self.state.logos(), 'templates': catalogue(), 'template_id': self.state.template_id})
         elif path == '/api/draft':
             self.serve_file(self.state.draft, 'resume.md')
         elif path in {'/', '/index.html', '/editor/styles.css', '/editor/bundle.js', '/editor/bundle.css', '/editor/resume.css'}:
             self.serve_file(SKILL / 'assets/editor' / ('index.html' if path == '/' else path.rsplit('/', 1)[-1]))
         elif path in {'/assets/fonts/NotoSansSC-Regular.ttf', '/assets/fonts/NotoSansSC-Bold.ttf'}:
             self.serve_file(SKILL / 'assets/fonts' / path.rsplit('/', 1)[-1])
+        elif path.startswith('/assets/templates/thumbnails/'):
+            allowed = {f'/assets/templates/thumbnails/{item["id"]}.png' for item in catalogue()}
+            if path not in allowed:
+                self.send_json(404, {'error': 'Unknown template thumbnail'})
+                return
+            self.serve_file(SKILL / 'assets/templates/thumbnails' / path.rsplit('/', 1)[-1])
         elif path.startswith('/assets/logos/'):
             name = path.removeprefix('/assets/logos/')
             allowed = {item['file'] for item in self.state.logos()}
             if name not in allowed or Path(name).name != name:
                 self.send_json(404, {'error': 'Unknown logo'})
                 return
-            self.serve_file(SKILL / 'assets/logos' / name)
+            try:
+                logo_path = logo_assets.resolve_logo_path(name)
+            except (ValueError, OSError):
+                self.send_json(404, {'error': 'Unknown logo'})
+                return
+            self.serve_file(logo_path)
         elif path.startswith('/builds/'):
             import re
             match = re.fullmatch(r'/builds/([a-f0-9]{32})/(resume\.pdf|preview-\d+\.png|previews\.zip)', path)
@@ -263,6 +283,7 @@ class EditorHandler(BaseHTTPRequestHandler):
                 raise ValueError('Request is too large or empty')
             data = json.loads(self.rfile.read(length))
             source, revision = data['source'], data['revision']
+            template_id = validate_template_id(data['template_id']) if 'template_id' in data else None
             pages = validate_pages(data['pages']) if 'pages' in data else None
             font_size = validate_font_size(data['font_size']) if 'font_size' in data else None
             if not isinstance(source, str) or len(source.encode('utf-8')) > MAX_SOURCE:
@@ -281,14 +302,15 @@ class EditorHandler(BaseHTTPRequestHandler):
             self.send_json(409, {'error': 'A save or build is running; try again when it finishes'})
             return
         try:
-            result = self.state.save(source, revision, pages, font_size) if endpoint == '/api/save' else self.state.compile(source, pages, revision, font_size)
+            template_id = self.state.template_id if template_id is None else template_id
+            result = self.state.save(source, revision, pages, font_size, template_id) if endpoint == '/api/save' else self.state.compile(source, pages, revision, font_size, template_id)
             self.send_json(200 if result['ok'] else 400, result)
         except (OSError, ValueError, subprocess.SubprocessError) as error:
             try:
                 saved = self.state.draft.read_text(encoding='utf-8') == source
             except OSError:
                 saved = False
-            self.send_json(500, {'ok': False, 'revision': revision, 'source_saved': saved, 'error': str(error)})
+            self.send_json(500, {'ok': False, 'revision': revision, 'source_saved': saved, 'template_id': template_id, 'error': str(error)})
         finally:
             self.state.lock.release()
 

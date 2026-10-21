@@ -61,3 +61,9 @@ v0.3 编辑内核实际复用 MIT 许可的 ByteMD 1.21.0，前端已预打包�
 ## 维护与分发
 
 前端源码为仓库 `frontend/editor.js`；维护者运行 `npm ci`、`npm run build`、`npm test`。终端使用者直接运行已打包编辑器，不需要 Node。源码 ZIP 应包含 `assets/editor/bundle.js`、`bundle.css`、完整 frontend licenses 和 notices。选型与设计见仓库 `docs/LIVE-EDITOR-RESEARCH.md`、`docs/TEA-DESIGN.md`。
+
+## 切换模板
+
+右侧「选择模板」打开缩略图面板：经典单栏、简洁单栏、彩色双栏。缩略图来自同一份虚构中文 Markdown 的真实 LaTeX PDF。选择后保留全部文字和字号，立即使旧导出过期，并自动按新模板重新编译。新的 PDF/PNG 只在新模板通过全文、页数与版面校验后开放。
+
+模板选择与字号/页数一起保存到 `editor-settings.json`，重启同一工作区可恢复；导出 Markdown 不包含模板设置。CLI 使用 `build.py --template minimal`（默认 `classic`）。已有旧工作区缺少模板字段时按 `classic` 读取。详见 [模板来源与适配](templates.md)。

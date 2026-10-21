@@ -131,10 +131,10 @@ class PreviewTests(unittest.TestCase):
         self.assertEqual(self.state.draft.read_bytes(), original)
         entered, release = threading.Event(), threading.Event()
         real_save = self.state.save
-        def slow_save(source, revision, pages=None, font_size=None):
+        def slow_save(source, revision, pages=None, font_size=None, template_id=None):
             entered.set()
             release.wait(timeout=2)
-            return real_save(source, revision, pages, font_size)
+            return real_save(source, revision, pages, font_size, template_id)
         result = []
         with patch.object(self.state, 'save', side_effect=slow_save):
             worker = threading.Thread(target=lambda: result.append(self.request('POST', '/api/save', {'source': '# saved', 'revision': 2})))
@@ -189,6 +189,80 @@ class PreviewTests(unittest.TestCase):
         for pages in [True, 0, 21]:
             self.assertEqual(self.request('POST', '/api/save', {'source': '# bad', 'revision': 4, 'pages': pages})[0], 400)
 
+    def test_template_catalogue_and_persisted_selection_preserve_source(self):
+        session = json.loads(self.request()[2])
+        self.assertEqual(session['template_id'], 'classic')
+        self.assertEqual({item['id'] for item in session['templates']}, {'classic', 'minimal', 'two-column'})
+        source = '# My own draft\n\n- Keep this text'
+        status, _, _ = self.request('POST', '/api/save', {'source': source, 'revision': 1, 'template_id': 'minimal'})
+        self.assertEqual(status, 200)
+        resumed = preview.EditorState(self.workspace)
+        self.assertEqual(resumed.template_id, 'minimal')
+        self.assertEqual(resumed.draft.read_text(encoding='utf-8'), source)
+        self.assertEqual(json.loads(self.state.settings_file.read_text())['template_id'], 'minimal')
+        self.request('POST', '/api/save', {'source': source, 'revision': 2})
+        self.assertEqual(self.state.template_id, 'minimal')
+        with patch.object(self.state, 'compile', return_value={'ok': True}) as compile_mock:
+            self.build(source=source)
+        self.assertEqual(compile_mock.call_args.args[-1], 'minimal')
+
+    def test_old_settings_default_to_classic(self):
+        self.state.settings_file.write_text(json.dumps({'pages': 2, 'font_size': 11}))
+        resumed = preview.EditorState(self.workspace)
+        self.assertEqual((resumed.pages, resumed.font_size, resumed.template_id), (2, 11, 'classic'))
+
+    def test_invalid_templates_never_overwrite_draft_or_settings(self):
+        original = self.state.draft.read_bytes()
+        for value in ['unknown', '../minimal', 'minimal.tex', '', None, True, {}, ['classic']]:
+            for endpoint in ['/api/build', '/api/save']:
+                with self.subTest(value=value, endpoint=endpoint):
+                    status, _, _ = self.request('POST', endpoint, {'source': '# changed', 'revision': 1, 'pages': 1, 'template_id': value})
+                    self.assertEqual(status, 400)
+                    self.assertEqual(self.state.draft.read_bytes(), original)
+                    self.assertFalse(self.state.settings_file.exists())
+        with self.assertRaises(ValueError):
+            self.state.compile('# changed', 1, 1, template_id='../classic')
+        self.assertEqual(self.state.draft.read_bytes(), original)
+
+    def test_template_forwarded_and_build_result_bound_to_selection(self):
+        def fake_compile(command):
+            self.assertEqual(command[command.index('--template') + 1], 'two-column')
+            return subprocess.CompletedProcess(command, 1, '', 'syntax error')
+        with patch.object(preview, 'run_compile', side_effect=fake_compile):
+            status, _, body = self.build(template_id='two-column')
+        self.assertEqual(status, 400)
+        self.assertEqual(json.loads(body)['template_id'], 'two-column')
+        self.assertEqual(self.state.template_id, 'two-column')
+        with patch.object(preview, 'run_compile', side_effect=subprocess.TimeoutExpired('build', 600)):
+            self.assertEqual(self.state.compile('# x', 1, 2, template_id='minimal')['template_id'], 'minimal')
+
+    def test_local_logo_route_uses_catalogue_resolver(self):
+        image = Path(self.temp.name) / 'school.svg'
+        image.write_bytes(b'<svg/>')
+        entries = {'school': {'id': 'school', 'file': 'school.svg', 'local': True}}
+        with patch.object(preview.logo_assets, 'catalogue', return_value=entries), patch.object(preview.logo_assets, 'resolve_logo_path', return_value=image, create=True) as resolver:
+            self.assertEqual(json.loads(self.request()[2])['logos'], list(entries.values()))
+            self.assertEqual(self.request(path='/assets/logos/school.svg')[2], b'<svg/>')
+            resolver.assert_called_once_with('school.svg')
+            self.assertEqual(self.request(path='/assets/logos/local/school.svg')[0], 404)
+        with patch.object(preview.logo_assets, 'catalogue', return_value=entries), patch.object(preview.logo_assets, 'resolve_logo_path', side_effect=ValueError('checksum mismatch'), create=True):
+            self.assertEqual(self.request(path='/assets/logos/school.svg')[0], 404)
+
+    def test_template_thumbnail_allowlist(self):
+        assets_root = Path(self.temp.name) / 'thumbnail-skill'
+        image = assets_root / 'assets/templates/thumbnails/minimal.png'
+        image.parent.mkdir(parents=True)
+        image.write_bytes(b'public thumbnail')
+        with patch.object(preview, 'SKILL', assets_root):
+            status, headers, body = self.request(path='/assets/templates/thumbnails/minimal.png')
+        self.assertEqual((status, body), (200, b'public thumbnail'))
+        self.assertEqual(headers['Content-Type'], 'image/png')
+        for path in ['/assets/templates/minimal.tex', '/assets/templates/thumbnails/unknown.png',
+                     '/assets/templates/thumbnails/../minimal.tex', '/assets/templates/thumbnails/%2e%2e/minimal.tex',
+                     '/assets/templates/thumbnails/minimal.png/extra', '/assets/templates/thumbnails/%6dinimal.png']:
+            with self.subTest(path=path):
+                self.assertEqual(self.request(path=path)[0], 404)
+
     def test_build_forwards_font_size_to_compiler(self):
         def fake_compile(command):
             self.assertEqual(command[command.index('--font-size') + 1], '9.5')
@@ -203,7 +277,7 @@ class PreviewTests(unittest.TestCase):
             status, _, body = self.build()
         self.assertEqual(status, 200)
         self.assertEqual(json.loads(body), result)
-        compile_mock.assert_called_once_with('# 测试\n## 经历\n- 新内容', 1, 7, 10.5)
+        compile_mock.assert_called_once_with('# 测试\n## 经历\n- 新内容', 1, 7, 10.5, 'classic')
 
     def test_compile_error_preserves_new_and_previous_drafts(self):
         previous = self.state.draft.read_text(encoding='utf-8')
@@ -234,6 +308,7 @@ class PreviewTests(unittest.TestCase):
         result = json.loads(body)
         self.assertEqual(status, 200)
         self.assertTrue(result['source_saved'])
+        self.assertEqual(result['template_id'], 'classic')
         self.assertNotIn('previews', result['report'])
         self.assertEqual(self.request(path=result['pdf_url'])[2], b'%PDF-test')
         self.assertEqual(self.request(path=result['previews'][0])[2], b'PNG-test')

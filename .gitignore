@@ -17,3 +17,6 @@ skills/latex-resume/assets/fonts/
 *.synctex.gz
 
 node_modules/
+
+# Optional user-downloaded university marks are never redistributed.
+skills/latex-resume/assets/logos/local/

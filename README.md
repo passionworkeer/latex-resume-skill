@@ -23,7 +23,7 @@
 
 默认先用仓库中的简约单栏模板。如果我发送新的 PDF、PNG 或 JPG 模板，请先观察版式并测量字号、边距、对齐和间距，再用真正可编辑的 LaTeX 重建，不要把整张图当作简历背景，也不要把模板示例人物的经历写进我的简历。
 
-如果我希望自己修改文字，请启动 scripts/preview.py 本地编辑器，用系统默认外部浏览器打开。编辑器默认在输入停顿 650ms 后自动调用 LaTeX 排版；右侧显示真实 PDF 渲染的逐页 PNG，不使用浏览器 HTML 排版。说明如何修改正文、加粗、选择正文字号，以及分别导出 PDF、PNG 和 Markdown。标题与布局固定，首次资源下载可能较慢。需要图标时，使用编辑器的搜索或本地图标目录查找；保留文字名称，核对品牌标识与使用条款，不下载不明来源素材。
+如果我希望自己修改文字，请启动 scripts/preview.py 本地编辑器，用系统默认外部浏览器打开。编辑器默认在输入停顿 650ms 后自动调用 LaTeX 排版；右侧显示真实 PDF 渲染的逐页 PNG，不使用浏览器 HTML 排版。说明如何修改正文、加粗、选择正文字号，以及分别导出 PDF、PNG 和 Markdown。通过带缩略图的模板选择器切换版式，同一份 Markdown 保持不变；首次资源下载可能较慢。需要图标时，使用编辑器的搜索或本地图标目录查找；保留文字名称，核对品牌标识与使用条款，不下载不明来源素材。
 
 把我的资料、证据、改稿和输出放在 private/ 或 output/ 中。不要提交或发布我的真实简历。生成后检查正文是否丢失、页数、文字边界、编译日志，并渲染所有页面逐页检查。交付 PDF、预览、可编辑源码、验证报告和仍需我补充的问题，明确自动检查与视觉检查分别完成了什么。
 ```
@@ -58,11 +58,23 @@ Windows PowerShell 将 `python3` 换成 `py -3`，将 `.venv/bin/python` 换成 
   --workspace private/editor
 ```
 
-命令会启动仅监听本机的服务，并自动使用**系统默认外部浏览器**打开编辑器。v0.3 真正复用 MIT 许可的 ByteMD 1.21.0；前端已预打包，终端使用者无需安装 Node。先运行 `setup.py` 自动安装 Python 依赖、字体与所需编译器。第一次使用载入虚构中文示例；修改内容后默认停顿 **650ms** 自动保存并调用 LaTeX。编译通常需要数秒，首次下载资源可能更慢；右侧显示实际 PDF 渲染的逐页 PNG，不是浏览器 HTML 排版。
+命令会启动仅监听本机的服务，并自动使用**系统默认外部浏览器**打开编辑器。编辑器复用 MIT 许可的 ByteMD 1.21.0；前端已预打包，终端使用者无需安装 Node。先运行 `setup.py` 自动安装 Python 依赖、字体与所需编译器。第一次使用载入虚构中文示例；修改内容后默认停顿 **650ms** 自动保存并调用 LaTeX。编译通常需要数秒，首次下载资源可能更慢；右侧显示实际 PDF 渲染的逐页 PNG，不是浏览器 HTML 排版。
 
-编辑器支持 Markdown 正文与加粗，以及 **9–12 pt、步进 0.5 pt** 的正文字号（默认 10.5 pt）；标题样式与整体布局固定。字号与预期页数保存到工作区 `editor-settings.json`；导出 Markdown 只包含正文，不包含这两项设置。PDF / PNG 只有当前内容和设置通过编译及校验后才启用；继续编辑会立即使旧下载过期并禁用。单页 PNG 直接下载，多页 PNG 打包为 ZIP。
+编辑器支持 Markdown 正文与加粗，以及 **9–12 pt、步进 0.5 pt** 的正文字号（默认 10.5 pt）；每套模板的标题样式与整体布局由 LaTeX 控制。「选择模板」展示真实样例缩略图，可在经典单栏、简洁单栏和彩色双栏间切换，同一份 Markdown 会自动重新排版。模板、字号与预期页数保存到工作区 `editor-settings.json`；导出 Markdown 只包含正文，不包含这些设置。PDF / PNG 只有当前内容和设置通过编译及校验后才启用；继续编辑会立即使旧下载过期并禁用。单页 PNG 直接下载，多页 PNG 打包为 ZIP。
+
+命令行也可以用 `build.py --template classic|minimal|two-column` 选择同一套模板。模板来源、适配范围和许可见 [模板说明](skills/latex-resume/references/templates.md)。
 
 「插入图标」可按名称或 ID 搜索本地 28 个图标，例如 GitHub；点击后在光标所在位置插入 `![logo:github]`。图标仅作装饰，应与文字名称同用，不代表任职、技能或品牌授权。详见 [图标来源与使用边界](skills/latex-resume/references/logos.md)。
+
+学校校徽提供 20 所学校的固定来源目录，可下载到本机后搜索插入。重点支持北京邮电大学：
+
+```bash
+.venv/bin/python skills/latex-resume/scripts/fetch_school_logos.py --school bupt
+# 或批量尝试全部候选；不支持的 SVG 会单独报告并跳过
+.venv/bin/python skills/latex-resume/scripts/fetch_school_logos.py --all
+```
+
+下载后刷新编辑器，在「插入图标」搜索「北邮」或 `bupt`。本次验证 15 所下载成功；校徽文件只保存在 Git 忽略的本地目录，公开仓库包含来源与下载工具，校徽权利仍归各学校。更多来源、使用条件和失败说明见 [校徽说明](skills/latex-resume/references/logos.md)。
 
 导入已有 Markdown 时，使用新工作区：
 
@@ -102,7 +114,7 @@ skills/latex-resume/
   scripts/                 环境准备、生成、验证和本地编辑器
   assets/templates/        可编辑 LaTeX 和虚构中英文 Markdown
   assets/editor/           本地 Markdown 编辑界面
-  assets/logos/            28 个 SVG、来源清单和许可说明
+  assets/logos/            品牌 SVG、学校来源目录和许可说明
   references/              工作流程、访谈、模板复刻和环境说明
 examples/                  可公开分享的虚构 PDF / PNG
 licenses/                  第三方许可证
@@ -120,4 +132,4 @@ output/                    用户生成结果（Git 忽略）
 
 ## English
 
-An agent skill for evidence-based resume editing, project-background interviews, editable LaTeX typesetting, and PDF/image reference reconstruction. Includes fictional Chinese and English examples, a local Markdown editor with actual PDF/page previews, 28 searchable local SVG marks, a local dependency bootstrapper, content/layout checks, and a required visual review loop. Read [SKILL.md](skills/latex-resume/SKILL.md), run `scripts/setup.py` from your workspace, then build a fictional example before working on private content.
+An agent skill for evidence-based resume editing, project-background interviews, editable LaTeX typesetting, and PDF/image reference reconstruction. Includes fictional Chinese and English examples, three switchable LaTeX layouts with thumbnails, a local Markdown editor with actual PDF/page previews, 28 bundled SVG marks and optional local university logos, a local dependency bootstrapper, content/layout checks, and a required visual review loop. Read [SKILL.md](skills/latex-resume/SKILL.md), run `scripts/setup.py` from your workspace, then build a fictional example before working on private content.

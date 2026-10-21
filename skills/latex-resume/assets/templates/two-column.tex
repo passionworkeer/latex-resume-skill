@@ -1,0 +1,36 @@
+% Adapted from jankapunkt/latexcv two_column, commit 1fc7a2033ddda0fa77003444cafcf96117ad58dd.
+% MIT, Jan Kuster; complete notice: LICENSE.latexcv.txt.
+% Adaptation: sequential balanced columns, shared Markdown macros, Noto CJK; no photo/QR/TikZ assets.
+% Common macro/font-loading lineage: zheyuye/resume-chinese (MIT), see LICENSE.txt.
+\documentclass[a4paper,10pt]{article}
+\usepackage{fontspec,xeCJK,xcolor,geometry,titlesec,enumitem,hyperref,graphicx,multicol}
+\setmainfont[Path=fonts/,Ligatures=NoCommon,Mapping=,BoldFont=NotoSansSC-Bold.ttf]{NotoSansSC-Regular.ttf}
+\setCJKmainfont[Path=fonts/,Ligatures=NoCommon,Mapping=,BoldFont=NotoSansSC-Bold.ttf]{NotoSansSC-Regular.ttf}
+\CJKsetecglue{}
+\geometry{left=12mm,right=12mm,top=12mm,bottom=12mm,noheadfoot}
+\definecolor{bodygray}{HTML}{303B48}
+\definecolor{stronggray}{HTML}{174B70}
+\definecolor{linkblue}{HTML}{174B70}
+\hypersetup{colorlinks=true,urlcolor=linkblue}
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt}
+\setlist[itemize]{topsep=0pt,itemsep=1.5pt,parsep=0pt,leftmargin=1.35em,label=\textbullet}
+\titleformat{\section}{\fontsize{12}{16}\selectfont\bfseries\color{stronggray}}{}{0em}{}[{\color{stronggray}\titlerule[0.5pt]}]
+\titlespacing*{\section}{0pt}{4.5pt}{3.5pt}
+\let\originaltextbf\textbf
+\renewcommand{\textbf}[1]{{\color{stronggray}\originaltextbf{#1}}}
+\newcommand{\resumename}[1]{{\centering\fontsize{24}{29}\selectfont\bfseries\color{stronggray}#1\par}\vspace{2pt}}
+\newcommand{\contact}[1]{{\centering #1\par}\vspace{2pt}}
+\newcommand{\entry}[3]{\par\vspace{4pt}\noindent\textbf{#1}\par #2\par {\small #3}\par\nopagebreak}
+\newcommand{\resumeicon}[1]{\raisebox{-1.5pt}{\includegraphics[height=10.5pt,width=28pt,keepaspectratio]{logos/#1.pdf}}\hspace{3pt}}
+\hyphenpenalty=10000
+\exhyphenpenalty=10000
+\emergencystretch=3em
+\raggedcolumns
+\setlength{\columnsep}{8mm}
+\setlength{\columnseprule}{0.3pt}
+\begin{document}
+\color{bodygray}\fontsize{%%FONT_SIZE%%}{%%LINE_HEIGHT%%}\selectfont
+%%BODY%%
+\end{document}

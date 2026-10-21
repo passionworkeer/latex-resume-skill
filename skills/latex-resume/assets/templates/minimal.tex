@@ -1,0 +1,33 @@
+% Adapted from sb2nov/resume, commit 7b70fe14876f97180034787f2a7f661597416a17.
+% MIT, Sourabh Bajaj; complete notice: LICENSE.sb2nov.txt.
+% Adaptation: shared escaped Markdown macros, Noto CJK, A4 geometry, no custom content.
+% Common macro/font-loading lineage: zheyuye/resume-chinese (MIT), see LICENSE.txt.
+\documentclass[a4paper,10pt]{article}
+\usepackage{fontspec,xeCJK,xcolor,geometry,titlesec,enumitem,hyperref,graphicx}
+\setmainfont[Path=fonts/,Ligatures=NoCommon,Mapping=,BoldFont=NotoSansSC-Bold.ttf]{NotoSansSC-Regular.ttf}
+\setCJKmainfont[Path=fonts/,Ligatures=NoCommon,Mapping=,BoldFont=NotoSansSC-Bold.ttf]{NotoSansSC-Regular.ttf}
+\CJKsetecglue{}
+\geometry{left=15mm,right=15mm,top=14mm,bottom=14mm,noheadfoot}
+\definecolor{bodygray}{HTML}{262626}
+\definecolor{stronggray}{HTML}{333333}
+\definecolor{linkblue}{HTML}{333333}
+\hypersetup{colorlinks=true,urlcolor=linkblue}
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt}
+\setlist[itemize]{topsep=0pt,itemsep=1.5pt,parsep=0pt,leftmargin=1.35em,label=\textbullet}
+\titleformat{\section}{\fontsize{12}{16}\selectfont\bfseries\color{black}}{}{0em}{}[{\color{black}\titlerule[0.5pt]}]
+\titlespacing*{\section}{0pt}{9pt}{5pt}
+\let\originaltextbf\textbf
+\renewcommand{\textbf}[1]{{\color{stronggray}\originaltextbf{#1}}}
+\newcommand{\resumename}[1]{{\centering\fontsize{22}{27}\selectfont\bfseries\color{stronggray}#1\par}\vspace{2pt}}
+\newcommand{\contact}[1]{{\centering #1\par}\vspace{2pt}}
+\newcommand{\entry}[3]{\par\vspace{4pt}\noindent\textbf{#1}\par #2\hfill #3\par\nopagebreak}
+\newcommand{\resumeicon}[1]{\raisebox{-1.5pt}{\includegraphics[height=10.5pt,width=28pt,keepaspectratio]{logos/#1.pdf}}\hspace{3pt}}
+\hyphenpenalty=10000
+\exhyphenpenalty=10000
+\emergencystretch=3em
+\begin{document}
+\color{bodygray}\fontsize{%%FONT_SIZE%%}{%%LINE_HEIGHT%%}\selectfont
+%%BODY%%
+\end{document}
