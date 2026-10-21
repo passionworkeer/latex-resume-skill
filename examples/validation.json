@@ -1,0 +1,79 @@
+{
+  "date": "2026-10-21",
+  "environment": "macOS ARM64, Python 3.13, Tectonic 0.17.0",
+  "unit_tests_passed": 10,
+  "examples": {
+    "zh": {
+      "automated": {
+        "exact_text_match": true,
+        "expected_characters": 743,
+        "actual_characters": 743,
+        "differences": [],
+        "pdf_sha256": "91018450cdf28bf3d3b7da53c26bf00700d7a093f1e3e5a22055c7513840f3ba",
+        "expected_text_sha256": "394dca76601a38b5fe6e337cd1fc21580eee285dea13d29912b593fe0a434c3e",
+        "log_sha256": "7ab0c154d05829f801a224f6c8d4850b81e34763b25c73ed0560573f8ef78cb3",
+        "page_count": 1,
+        "expected_pages": 1,
+        "page_sizes": [
+          {
+            "page": 1,
+            "width_pt": 595.28,
+            "height_pt": 841.89
+          }
+        ],
+        "out_of_page_glyphs": [],
+        "font_and_overflow_warnings": [],
+        "log_checked": true,
+        "visual_check_required": true,
+        "visual_status": "PENDING: inspect every rendered page before delivery",
+        "passed": true,
+        "source_sha256": "d634d409c6b2e97876bf265cca69c44b794cbb1b17705252bab8c77a73da4cce",
+        "template_sha256": "75bf7d428ead840c154253ce9b918a336883b8eb17a1b5801690dbab871d627d"
+      },
+      "visual_review": {
+        "status": "passed",
+        "pdf_sha256": "91018450cdf28bf3d3b7da53c26bf00700d7a093f1e3e5a22055c7513840f3ba",
+        "pages_reviewed": [
+          1
+        ],
+        "notes": "Inspected rendered final page: readable text, aligned titles/dates, no clipped or overlapping content. Fictional minimal example deliberately leaves writing space."
+      }
+    },
+    "en": {
+      "automated": {
+        "exact_text_match": true,
+        "expected_characters": 789,
+        "actual_characters": 789,
+        "differences": [],
+        "pdf_sha256": "faaf355bab66d067bac6219194f7e7d5b7b199ca1c1ab99bcfd94e18e35abe02",
+        "expected_text_sha256": "5e6935e26a822e62e815af384008a76b5807264c9fa6b27d2d3d0093eb5c8efa",
+        "log_sha256": "2cde2a0ea474f35594f4ccee4789f43d34fabf326af1aa084c50ad26cfd4b235",
+        "page_count": 1,
+        "expected_pages": 1,
+        "page_sizes": [
+          {
+            "page": 1,
+            "width_pt": 595.28,
+            "height_pt": 841.89
+          }
+        ],
+        "out_of_page_glyphs": [],
+        "font_and_overflow_warnings": [],
+        "log_checked": true,
+        "visual_check_required": true,
+        "visual_status": "PENDING: inspect every rendered page before delivery",
+        "passed": true,
+        "source_sha256": "cbf2256c3aaa7d4820f8c35cd8808e43db0b33bcf527272c44f0d943001f60db",
+        "template_sha256": "75bf7d428ead840c154253ce9b918a336883b8eb17a1b5801690dbab871d627d"
+      },
+      "visual_review": {
+        "status": "passed",
+        "pdf_sha256": "faaf355bab66d067bac6219194f7e7d5b7b199ca1c1ab99bcfd94e18e35abe02",
+        "pages_reviewed": [
+          1
+        ],
+        "notes": "Inspected rendered final page: readable text, aligned titles/dates, no clipped or overlapping content. Fictional minimal example deliberately leaves writing space."
+      }
+    }
+  }
+}
