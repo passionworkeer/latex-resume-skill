@@ -78,7 +78,7 @@ class EditorState:
             incoming = Path(source).read_text(encoding='utf-8')
             if self.draft.exists() and self.draft.read_text(encoding='utf-8') != incoming:
                 raise ValueError('Workspace already has a different draft. Omit --source to resume it, or choose a new --workspace.')
-            self.draft.write_text(incoming, encoding='utf-8')
+            self.draft.write_bytes(incoming.encode('utf-8'))
         elif not self.draft.exists():
             shutil.copyfile(SKILL / 'assets/templates/example-zh.md', self.draft)
         self.settings_file = self.workspace / 'editor-settings.json'
@@ -107,7 +107,7 @@ class EditorState:
         if self.draft.exists():
             shutil.copyfile(self.draft, self.workspace / 'resume.previous.md')
         temporary = self.workspace / 'resume.md.tmp'
-        temporary.write_text(source, encoding='utf-8')
+        temporary.write_bytes(source.encode('utf-8'))
         temporary.replace(self.draft)
         settings_tmp = self.settings_file.with_suffix('.json.tmp')
         settings_tmp.write_text(json.dumps(settings), encoding='utf-8')
@@ -123,7 +123,7 @@ class EditorState:
         snapshots = self.workspace / 'snapshots'
         snapshots.mkdir(exist_ok=True)
         snapshot = snapshots / (build_id + '.md')
-        snapshot.write_text(source, encoding='utf-8')
+        snapshot.write_bytes(source.encode('utf-8'))
         command = [self.python, str(SKILL / 'scripts/build.py'), '--source', str(snapshot), '--output', str(output), '--pages', str(pages), '--font-size', str(font_size)]
         try:
             process = run_compile(command + ['--only-cached'])

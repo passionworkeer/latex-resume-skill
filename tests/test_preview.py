@@ -89,7 +89,7 @@ class PreviewTests(unittest.TestCase):
 
     def test_save_utf8_draft_and_backup_without_compilation(self):
         previous = self.state.draft.read_bytes()
-        source = '# 王建军\n\n实时预览 · résumé 🚀'
+        source = '# 林知遥\n\n实时预览 · résumé 🚀'
         with patch.object(self.state, 'compile') as compile_mock:
             status, _, body = self.request('POST', '/api/save', {'source': source, 'revision': 12})
         self.assertEqual(status, 200)
