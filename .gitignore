@@ -1,0 +1,17 @@
+# User documents and build/runtime material stay local.
+private/
+input/
+output/
+.cache/
+.tools/
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+.env
+.env.*
+skills/latex-resume/assets/fonts/
+*.aux
+*.log
+*.xdv
+*.synctex.gz

@@ -1,0 +1,4 @@
+interface:
+  display_name: "LaTeX Resume"
+  short_description: "Evidence-based resume editing and LaTeX PDF creation"
+  default_prompt: "Use $latex-resume to improve my resume and create an editable LaTeX source and verified PDF."

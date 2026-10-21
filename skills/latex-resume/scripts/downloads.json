@@ -1,0 +1,39 @@
+{
+  "fonts": {
+    "NotoSansSC-Variable.ttf": {
+      "url": "https://raw.githubusercontent.com/google/fonts/a85815a42757630ce188fdad368c2dfc444d4773/ofl/notosanssc/NotoSansSC%5Bwght%5D.ttf",
+      "sha256": "a3041811a78c361b1de50f953c805e0244951c21c5bd412f7232ef0d899af0da"
+    },
+    "OFL.txt": {
+      "url": "https://raw.githubusercontent.com/google/fonts/a85815a42757630ce188fdad368c2dfc444d4773/ofl/notosanssc/OFL.txt",
+      "sha256": "1c05c68c34f9708415aada51f17e1b0092d2cea709bf4a94cd38114f9e73d7d9"
+    }
+  },
+  "tectonic": {
+    "darwin-aarch64": {
+      "url": "https://github.com/tectonic-typesetting/tectonic/releases/download/tectonic%400.17.0/tectonic-0.17.0-aarch64-apple-darwin.tar.gz",
+      "sha256": "a3f1cac7c5678f01661a92212f58480ae3b0634115d880dbc59e2953ded45667",
+      "filename": "tectonic-0.17.0-aarch64-apple-darwin.tar.gz"
+    },
+    "darwin-x86_64": {
+      "url": "https://github.com/tectonic-typesetting/tectonic/releases/download/tectonic%400.17.0/tectonic-0.17.0-x86_64-apple-darwin.tar.gz",
+      "sha256": "7c90ef5b6ddb1eb1937e4337add5237b79338e4b9676459fa91187d24d6cdf80",
+      "filename": "tectonic-0.17.0-x86_64-apple-darwin.tar.gz"
+    },
+    "linux-aarch64": {
+      "url": "https://github.com/tectonic-typesetting/tectonic/releases/download/tectonic%400.17.0/tectonic-0.17.0-aarch64-unknown-linux-musl.tar.gz",
+      "sha256": "b10954a95404f3ab2328d2fa59a5ebab8e657f893fab096f98be8db7c0c979b8",
+      "filename": "tectonic-0.17.0-aarch64-unknown-linux-musl.tar.gz"
+    },
+    "linux-x86_64": {
+      "url": "https://github.com/tectonic-typesetting/tectonic/releases/download/tectonic%400.17.0/tectonic-0.17.0-x86_64-unknown-linux-musl.tar.gz",
+      "sha256": "8533d07f9ccbd7a65824b9e0459041bca34af1eb33daba48f59215593753a3b7",
+      "filename": "tectonic-0.17.0-x86_64-unknown-linux-musl.tar.gz"
+    },
+    "windows-x86_64": {
+      "url": "https://github.com/tectonic-typesetting/tectonic/releases/download/tectonic%400.17.0/tectonic-0.17.0-x86_64-pc-windows-msvc.zip",
+      "sha256": "f61ce51f0b0ade1015b7de7ef368541c5424e9756ecbd0d7af97d6d48030845f",
+      "filename": "tectonic-0.17.0-x86_64-pc-windows-msvc.zip"
+    }
+  }
+}
