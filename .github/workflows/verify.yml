@@ -16,6 +16,16 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Verify bundled open-source editor
+        run: |
+          npm ci
+          npm run build
+          npm test
+          git diff --exit-code -- skills/latex-resume/assets/editor/bundle.js skills/latex-resume/assets/editor/bundle.css skills/latex-resume/assets/editor/THIRD_PARTY_NOTICES.md
       - name: Prepare local dependencies
         run: python skills/latex-resume/scripts/setup.py
       - name: Tests and examples

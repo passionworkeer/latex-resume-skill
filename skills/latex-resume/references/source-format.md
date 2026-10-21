@@ -30,9 +30,11 @@
 
 内容源是 Markdown；样式源是 `assets/templates/resume.tex`。生成的 `output/.../resume.tex` 供查看、交付或作为新的自定义模板起点，常规改稿仍应回到 Markdown 和样式源。
 
-## 本地手动编辑
+## 本地实时编辑
 
-运行 `scripts/preview.py --workspace private/editor`，可在系统默认外部浏览器编辑此格式、搜索插入图标并生成实际 PDF/逐页 PNG。使用 [editor.md](editor.md) 中的命令和保存规则。
+运行 `scripts/preview.py --workspace private/editor`，可在系统默认外部浏览器通过已打包的 ByteMD 1.21.0 编辑此格式、搜索插入图标，默认停顿 650ms 后自动调用 LaTeX 生成实际 PDF/逐页 PNG。编译可能需数秒，首次资源下载更慢；不使用浏览器 HTML 排版。使用 [editor.md](editor.md) 中的命令和保存规则。
+
+编辑器仅开放正文、加粗与正文字号（9–12 pt，步进 0.5 pt，默认 10.5 pt）；标题样式与布局固定。字号和预期页数持久保存到工作区 `editor-settings.json`，导出 Markdown 只含正文，不含字体和页数设置。当前版本校验成功才可导出 PDF / PNG，编辑后旧产物过期并禁用；单页 PNG 直接下载，多页 PNG 以 ZIP 下载。
 
 ## 构建
 

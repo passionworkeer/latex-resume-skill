@@ -2,6 +2,7 @@
 """Compile the documented, deliberately small Markdown resume format."""
 import argparse
 import os
+import math
 from pathlib import Path
 import re
 import shutil
@@ -58,7 +59,14 @@ def inline(text):
     return ''.join(tex), ''.join(plain)
 
 
-def convert(source):
+def validate_font_size(value):
+    if type(value) not in (int, float) or not math.isfinite(value) or not 9 <= value <= 12 or value * 2 != int(value * 2):
+        raise ValueError('Font size must be 9–12 in steps of 0.5')
+    return float(value)
+
+
+def convert(source, font_size=10.5):
+    font_size = validate_font_size(font_size)
     body, expected = [], []
     in_list = False
     seen_name = False
@@ -117,7 +125,7 @@ def convert(source):
     if in_list:
         body.append(r'\end{itemize}')
     template = (ROOT / 'assets/templates/resume.tex').read_text(encoding='utf-8')
-    return template.replace('%%BODY%%', '\n'.join(body)), '\n'.join(expected) + '\n'
+    return template.replace('%%FONT_SIZE%%', f'{font_size:g}').replace('%%LINE_HEIGHT%%', f'{font_size * (13.8 / 10.5):.2f}'.rstrip('0').rstrip('.')).replace('%%BODY%%', '\n'.join(body)), '\n'.join(expected) + '\n'
 
 
 def select_engine(choice):
@@ -152,8 +160,11 @@ def main():
     parser.add_argument('--output', required=True, type=Path, help='Dedicated output directory')
     parser.add_argument('--engine', choices=['auto', 'tectonic', 'xelatex'], default='auto')
     parser.add_argument('--pages', type=int, default=1)
+    parser.add_argument('--font-size', type=float, default=10.5)
+    parser.add_argument('--only-cached', action='store_true', help='Use only cached Tectonic resources')
     parser.add_argument('--bundle', default='https://data1b.fullyjustified.net/tlextras-2022.0r0.tar', help='Tectonic resource bundle URL or path')
     args = parser.parse_args()
+    validate_font_size(args.font_size)
     out = args.output.resolve()
     source_path = args.source.resolve()
     if out == ROOT or ROOT in out.parents or out == source_path.parent or source_path in [out / 'resume.tex', out / 'expected-text.txt', out / 'resume.pdf']:
@@ -162,7 +173,7 @@ def main():
         raise ValueError('--pages must be positive')
     out.mkdir(parents=True, exist_ok=True)
     clear_previous_results(out, source_path)
-    tex, expected = convert(args.source.read_text(encoding='utf-8'))
+    tex, expected = convert(args.source.read_text(encoding='utf-8'), args.font_size)
     (out / 'resume.tex').write_text(tex, encoding='utf-8')
     (out / 'expected-text.txt').write_text(expected, encoding='utf-8')
     fonts = ROOT / 'assets/fonts'
@@ -178,6 +189,8 @@ def main():
         raise RuntimeError('No requested TeX engine available; run setup first')
     if engine == 'tectonic':
         command = [executable, '--untrusted', '--keep-logs', '--keep-intermediates', '--bundle', args.bundle, 'resume.tex']
+        if args.only_cached:
+            command.insert(1, '-C')
     else:
         command = [executable, '-no-shell-escape', '-halt-on-error', '-file-line-error', '-interaction=nonstopmode', 'resume.tex']
     result = subprocess.run(command, cwd=out, capture_output=True, text=True)

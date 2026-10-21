@@ -8,7 +8,7 @@
         "expected_characters": 743,
         "actual_characters": 743,
         "differences": [],
-        "pdf_sha256": "262bf5b9640c4fbad7afcf70529c959043dd0f7a21db2b01128653e60bba431d",
+        "pdf_sha256": "a94d53ea9b7e66b00e4013e2eff3ea15620820b9723bc482cc47e80e8bdde459",
         "expected_text_sha256": "394dca76601a38b5fe6e337cd1fc21580eee285dea13d29912b593fe0a434c3e",
         "log_sha256": "4e7f9608589fd9aa18590c04d750cf0ca25565bf59c68de592a83f13f7dcea1f",
         "page_count": 1,
@@ -27,11 +27,11 @@
         "visual_status": "PENDING: inspect every rendered page before delivery",
         "passed": true,
         "source_sha256": "d634d409c6b2e97876bf265cca69c44b794cbb1b17705252bab8c77a73da4cce",
-        "template_sha256": "cd853f1619fc3808afbcfd632568016389632df9eaa2957837ffac862bbcb158"
+        "template_sha256": "0762081c02633d730c02c4e41242cfe3afd4d29e610edab512982d4da05f04db"
       },
       "visual_review": {
         "status": "passed",
-        "pdf_sha256": "262bf5b9640c4fbad7afcf70529c959043dd0f7a21db2b01128653e60bba431d",
+        "pdf_sha256": "a94d53ea9b7e66b00e4013e2eff3ea15620820b9723bc482cc47e80e8bdde459",
         "pages_reviewed": [
           1
         ],
@@ -44,7 +44,7 @@
         "expected_characters": 789,
         "actual_characters": 789,
         "differences": [],
-        "pdf_sha256": "360564008691b2de1662f9c18bc36e179ceab2a06ea4901e08c96c66a9bf5f33",
+        "pdf_sha256": "b3ead4014011b9dc6315b02616fedb77ebd9f58879ba2a4b09c8955a039c954c",
         "expected_text_sha256": "5e6935e26a822e62e815af384008a76b5807264c9fa6b27d2d3d0093eb5c8efa",
         "log_sha256": "aa9e9bd184fe7fddfb8a42e44e4e7efbcf827e013408ef99658bbd2b17e865d5",
         "page_count": 1,
@@ -63,11 +63,11 @@
         "visual_status": "PENDING: inspect every rendered page before delivery",
         "passed": true,
         "source_sha256": "cbf2256c3aaa7d4820f8c35cd8808e43db0b33bcf527272c44f0d943001f60db",
-        "template_sha256": "cd853f1619fc3808afbcfd632568016389632df9eaa2957837ffac862bbcb158"
+        "template_sha256": "0762081c02633d730c02c4e41242cfe3afd4d29e610edab512982d4da05f04db"
       },
       "visual_review": {
         "status": "passed",
-        "pdf_sha256": "360564008691b2de1662f9c18bc36e179ceab2a06ea4901e08c96c66a9bf5f33",
+        "pdf_sha256": "b3ead4014011b9dc6315b02616fedb77ebd9f58879ba2a4b09c8955a039c954c",
         "pages_reviewed": [
           1
         ],
@@ -80,7 +80,7 @@
         "expected_characters": 164,
         "actual_characters": 164,
         "differences": [],
-        "pdf_sha256": "610c040d68f44e071e1fc64da68b1ef998736d729862127e0b532dc386b73734",
+        "pdf_sha256": "03ea97187c8306f5d76e29e2a6b5f0a0116a613fae0dc809278924bad4e2bcff",
         "expected_text_sha256": "ac77d517346ef8d083f4c3838abae83988f7a7a4cbde058491bb5aa43a6e195c",
         "log_sha256": "1201b66f639d1716febc9370ec1c4a680115f5c1dd38d0afa0ec2fdb472f3887",
         "page_count": 1,
@@ -99,11 +99,11 @@
         "visual_status": "PENDING: inspect every rendered page before delivery",
         "passed": true,
         "source_sha256": "bde6a7b8e4525c6dcaeafd6490e47f3befd30b1f6115c57351ac9d8b1b7c135b",
-        "template_sha256": "cd853f1619fc3808afbcfd632568016389632df9eaa2957837ffac862bbcb158"
+        "template_sha256": "0762081c02633d730c02c4e41242cfe3afd4d29e610edab512982d4da05f04db"
       },
       "visual_review": {
         "status": "passed",
-        "pdf_sha256": "610c040d68f44e071e1fc64da68b1ef998736d729862127e0b532dc386b73734",
+        "pdf_sha256": "03ea97187c8306f5d76e29e2a6b5f0a0116a613fae0dc809278924bad4e2bcff",
         "pages_reviewed": [
           1
         ],
@@ -111,5 +111,6 @@
       }
     }
   },
-  "unit_tests_passed": 27
+  "unit_tests_passed": 36,
+  "frontend_tests_passed": 2
 }

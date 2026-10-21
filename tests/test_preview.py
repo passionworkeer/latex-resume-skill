@@ -2,6 +2,8 @@
 import http.client
 import importlib.util
 import json
+import io
+import zipfile
 import os
 import signal
 import sys
@@ -85,13 +87,123 @@ class PreviewTests(unittest.TestCase):
                 self.assertEqual(self.state.draft.read_bytes(), original)
         self.assertFalse((self.workspace / 'resume.previous.md').exists())
 
+    def test_save_utf8_draft_and_backup_without_compilation(self):
+        previous = self.state.draft.read_bytes()
+        source = '# 王建军\n\n实时预览 · résumé 🚀'
+        with patch.object(self.state, 'compile') as compile_mock:
+            status, _, body = self.request('POST', '/api/save', {'source': source, 'revision': 12})
+        self.assertEqual(status, 200)
+        self.assertEqual(json.loads(body), {'ok': True, 'source_saved': True, 'revision': 12})
+        compile_mock.assert_not_called()
+        self.assertEqual(self.state.draft.read_bytes(), source.encode('utf-8'))
+        self.assertEqual((self.workspace / 'resume.previous.md').read_bytes(), previous)
+        self.assertEqual(json.loads(self.request()[2])['source'], source)
+        self.assertEqual(self.request(path='/api/draft')[2], source.encode('utf-8'))
+        self.assertFalse((self.workspace / 'resume.md.tmp').exists())
+
+    def test_save_allows_empty_and_whitespace_drafts(self):
+        for revision, source in enumerate(['', ' \n\t']):
+            with self.subTest(source=source):
+                status, _, body = self.request('POST', '/api/save', {'source': source, 'revision': revision})
+                self.assertEqual(status, 200)
+                self.assertTrue(json.loads(body)['source_saved'])
+                self.assertEqual(self.state.draft.read_text(encoding='utf-8'), source)
+                self.assertEqual(self.build(source=source)[0], 400)
+
+    def test_save_rejects_invalid_session_and_payload_without_writing(self):
+        original = self.state.draft.read_bytes()
+        for headers in [{'X-Session-Token': 'wrong'}, {'Origin': 'https://attacker.example'}, {'Host': 'attacker.example'}]:
+            with self.subTest(headers=headers):
+                self.assertEqual(self.request('POST', '/api/save', {'source': '# changed', 'revision': 0}, headers)[0], 403)
+        for data in [{'source': None, 'revision': 0}, {'source': '汉' * 70000, 'revision': 0}, {'source': '# x', 'revision': True}, {'source': '# x', 'revision': -1}, {'source': '# x'}]:
+            with self.subTest(fields=list(data)):
+                self.assertEqual(self.request('POST', '/api/save', data)[0], 400)
+        self.assertEqual(self.state.draft.read_bytes(), original)
+        self.assertFalse((self.workspace / 'resume.previous.md').exists())
+
+    def test_save_and_build_share_busy_lock(self):
+        original = self.state.draft.read_bytes()
+        self.state.lock.acquire()
+        try:
+            self.assertEqual(self.request('POST', '/api/save', {'source': '# changed', 'revision': 1})[0], 409)
+        finally:
+            self.state.lock.release()
+        self.assertEqual(self.state.draft.read_bytes(), original)
+        entered, release = threading.Event(), threading.Event()
+        real_save = self.state.save
+        def slow_save(source, revision, pages=None, font_size=None):
+            entered.set()
+            release.wait(timeout=2)
+            return real_save(source, revision, pages, font_size)
+        result = []
+        with patch.object(self.state, 'save', side_effect=slow_save):
+            worker = threading.Thread(target=lambda: result.append(self.request('POST', '/api/save', {'source': '# saved', 'revision': 2})))
+            worker.start()
+            try:
+                self.assertTrue(entered.wait(timeout=2))
+                self.assertEqual(self.build()[0], 409)
+                self.assertEqual(self.request('POST', '/api/save', {'source': '# competing', 'revision': 3})[0], 409)
+            finally:
+                release.set()
+                worker.join(timeout=3)
+        self.assertEqual(result[0][0], 200)
+        self.assertEqual(self.state.draft.read_text(encoding='utf-8'), '# saved')
+
+    def test_editor_csp_and_font_allowlist(self):
+        status, headers, _ = self.request()
+        self.assertEqual(status, 200)
+        policy = headers['Content-Security-Policy']
+        self.assertIn("script-src 'self';", policy)
+        self.assertNotIn('unsafe-eval', policy)
+        self.assertIn("style-src 'self' 'unsafe-inline'", policy)
+        self.assertIn("img-src 'self' data: blob:", policy)
+        self.assertIn("font-src 'self' data:", policy)
+        assets_root = Path(self.temp.name) / 'static-skill'
+        for relative in ['editor/bundle.js', 'editor/bundle.css', 'editor/resume.css', 'fonts/NotoSansSC-Regular.ttf', 'fonts/NotoSansSC-Bold.ttf']:
+            asset = assets_root / 'assets' / relative
+            asset.parent.mkdir(parents=True, exist_ok=True)
+            asset.write_bytes(b'static fixture')
+            url = '/editor/' + asset.name if relative.startswith('editor/') else '/assets/' + relative
+            with patch.object(preview, 'SKILL', assets_root):
+                response = self.request(path=url)
+            self.assertEqual(response[0], 200)
+            self.assertEqual(response[2], b'static fixture')
+        for path in ['/assets/fonts/other.ttf', '/assets/fonts/../editor/app.js', '/assets/fonts/%2e%2e/editor/app.js']:
+            self.assertEqual(self.request(path=path)[0], 404)
+
+    def test_font_size_validation_and_persisted_settings(self):
+        original = self.state.draft.read_bytes()
+        for value in [True, None, '10.5', 8.5, 12.5, 10.1, float('nan'), float('inf')]:
+            for endpoint in ['/api/build', '/api/save']:
+                with self.subTest(value=value, endpoint=endpoint):
+                    data = {'source': '# changed', 'pages': 1, 'revision': 1, 'font_size': value}
+                    self.assertEqual(self.request('POST', endpoint, data)[0], 400)
+                    self.assertEqual(self.state.draft.read_bytes(), original)
+        self.assertEqual(self.request('POST', '/api/save', {'source': '# changed', 'pages': 2, 'font_size': 11, 'revision': 2})[0], 200)
+        resumed = preview.EditorState(self.workspace)
+        self.assertEqual((resumed.pages, resumed.font_size), (2, 11))
+        self.assertEqual(self.request('POST', '/api/save', {'source': '', 'revision': 3})[0], 200)
+        session = json.loads(self.request()[2])
+        self.assertEqual((session['default_pages'], session['font_size']), (2, 11))
+        self.assertEqual(self.state.draft.read_bytes(), b'')
+        for pages in [True, 0, 21]:
+            self.assertEqual(self.request('POST', '/api/save', {'source': '# bad', 'revision': 4, 'pages': pages})[0], 400)
+
+    def test_build_forwards_font_size_to_compiler(self):
+        def fake_compile(command):
+            self.assertEqual(command[command.index('--font-size') + 1], '9.5')
+            return subprocess.CompletedProcess(command, 1, '', '')
+        with patch.object(preview, 'run_compile', side_effect=fake_compile):
+            self.assertEqual(self.build(font_size=9.5)[0], 400)
+        self.assertEqual(self.state.font_size, 9.5)
+
     def test_build_forwards_snapshot_and_report(self):
         result = {'ok': True, 'revision': 7, 'source_saved': True, 'report': {'passed': True}, 'previews': ['/builds/' + 'a' * 32 + '/preview-1.png'], 'pdf_url': '/builds/' + 'a' * 32 + '/resume.pdf'}
         with patch.object(self.state, 'compile', return_value=result) as compile_mock:
             status, _, body = self.build()
         self.assertEqual(status, 200)
         self.assertEqual(json.loads(body), result)
-        compile_mock.assert_called_once_with('# 测试\n## 经历\n- 新内容', 1, 7)
+        compile_mock.assert_called_once_with('# 测试\n## 经历\n- 新内容', 1, 7, 10.5)
 
     def test_compile_error_preserves_new_and_previous_drafts(self):
         previous = self.state.draft.read_text(encoding='utf-8')
@@ -125,6 +237,14 @@ class PreviewTests(unittest.TestCase):
         self.assertNotIn('previews', result['report'])
         self.assertEqual(self.request(path=result['pdf_url'])[2], b'%PDF-test')
         self.assertEqual(self.request(path=result['previews'][0])[2], b'PNG-test')
+        self.assertNotIn('Content-Disposition', self.request(path=result['previews'][0])[1])
+        self.assertIn('attachment; filename="preview-1.png"', self.request(path=result['previews'][0] + '?download=1')[1]['Content-Disposition'])
+        status, headers, body = self.request(path=f"/builds/{result['build_id']}/previews.zip")
+        self.assertEqual(status, 200)
+        self.assertEqual(headers['Content-Type'], 'application/zip')
+        with zipfile.ZipFile(io.BytesIO(body)) as archive:
+            self.assertEqual(archive.namelist(), ['preview-1.png', 'preview-2.png', 'preview-10.png'])
+            self.assertEqual(archive.read('preview-2.png'), b'PNG-two')
         self.assertEqual(result['previews'], [f"/builds/{result['build_id']}/preview-{number}.png" for number in [1, 2, 10]])
 
     def test_timeout_preserves_draft_and_releases_lock(self):
@@ -135,6 +255,18 @@ class PreviewTests(unittest.TestCase):
         self.assertEqual(self.state.draft.read_text(encoding='utf-8'), '# timeout draft')
         self.assertFalse(self.state.lock.locked())
 
+
+    def test_missing_cache_retries_online_but_syntax_errors_do_not(self):
+        missing = subprocess.CompletedProcess([], 1, '', "error: this bundle isn't cached")
+        failure = subprocess.CompletedProcess([], 1, '', 'syntax error')
+        with patch.object(preview, 'run_compile', side_effect=[missing, failure]) as run:
+            self.state.compile('# test', 1, 0)
+        self.assertEqual(run.call_count, 2)
+        self.assertIn('--only-cached', run.call_args_list[0].args[0])
+        self.assertNotIn('--only-cached', run.call_args_list[1].args[0])
+        with patch.object(preview, 'run_compile', return_value=failure) as run:
+            self.state.compile('# test', 1, 1)
+        self.assertEqual(run.call_count, 1)
 
     def test_compiler_output_uses_utf8(self):
         result = preview.run_compile([sys.executable, '-c', "print('中文诊断')"], timeout=30)

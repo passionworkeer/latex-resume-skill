@@ -4,7 +4,10 @@ import argparse
 import hmac
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
+import io
+import zipfile
 import mimetypes
+import math
 import os
 import signal
 from pathlib import Path
@@ -13,7 +16,7 @@ import shutil
 import subprocess
 import sys
 import threading
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit, parse_qs
 import uuid
 import webbrowser
 
@@ -22,6 +25,19 @@ MAX_SOURCE = 200_000
 # JSON may expand a source byte to six bytes (for example, a control escape).
 MAX_REQUEST = MAX_SOURCE * 6 + 2000
 BUILD_TIMEOUT = 600
+
+
+def validate_font_size(value):
+    if type(value) not in (int, float) or not math.isfinite(value) or not 9 <= value <= 12 or value * 2 != int(value * 2):
+        raise ValueError('Font size must be 9–12 in steps of 0.5')
+    return float(value)
+
+
+def validate_pages(value):
+    if type(value) is not int or not 1 <= value <= 20:
+        raise ValueError('Expected page count must be 1–20')
+    return value
+
 IS_WINDOWS = os.name == 'nt'
 
 
@@ -65,7 +81,12 @@ class EditorState:
             self.draft.write_text(incoming, encoding='utf-8')
         elif not self.draft.exists():
             shutil.copyfile(SKILL / 'assets/templates/example-zh.md', self.draft)
-        self.pages = pages
+        self.settings_file = self.workspace / 'editor-settings.json'
+        self.pages, self.font_size = pages, 10.5
+        if self.settings_file.exists():
+            settings = json.loads(self.settings_file.read_text(encoding='utf-8'))
+            self.pages = validate_pages(settings['pages'])
+            self.font_size = validate_font_size(settings['font_size'])
         self.python = python or sys.executable
         self.token = secrets.token_urlsafe(32)
         self.lock = threading.Lock()
@@ -79,22 +100,42 @@ class EditorState:
         data = json.loads(path.read_text(encoding='utf-8'))
         return data if isinstance(data, list) else data.get('logos', data.get('icons', []))
 
-    def compile(self, source, pages, revision):
-        # Save user edits before compilation, including drafts that have syntax errors.
+    def save(self, source, revision, pages=None, font_size=None):
+        """Atomically save a draft; the caller holds the shared save/build lock."""
+        settings = {'pages': self.pages if pages is None else validate_pages(pages),
+                    'font_size': self.font_size if font_size is None else validate_font_size(font_size)}
         if self.draft.exists():
             shutil.copyfile(self.draft, self.workspace / 'resume.previous.md')
         temporary = self.workspace / 'resume.md.tmp'
         temporary.write_text(source, encoding='utf-8')
         temporary.replace(self.draft)
+        settings_tmp = self.settings_file.with_suffix('.json.tmp')
+        settings_tmp.write_text(json.dumps(settings), encoding='utf-8')
+        settings_tmp.replace(self.settings_file)
+        self.pages, self.font_size = settings['pages'], settings['font_size']
+        return {'ok': True, 'source_saved': True, 'revision': revision}
+
+    def compile(self, source, pages, revision, font_size=10.5):
+        # Save user edits before compilation, including drafts that have syntax errors.
+        self.save(source, revision, pages, font_size)
         build_id = uuid.uuid4().hex
         output = self.builds / build_id
         snapshots = self.workspace / 'snapshots'
         snapshots.mkdir(exist_ok=True)
         snapshot = snapshots / (build_id + '.md')
         snapshot.write_text(source, encoding='utf-8')
-        command = [self.python, str(SKILL / 'scripts/build.py'), '--source', str(snapshot), '--output', str(output), '--pages', str(pages)]
+        command = [self.python, str(SKILL / 'scripts/build.py'), '--source', str(snapshot), '--output', str(output), '--pages', str(pages), '--font-size', str(font_size)]
         try:
-            process = run_compile(command)
+            process = run_compile(command + ['--only-cached'])
+            if process.returncode:
+                log = output / 'build.log'
+                diagnostics = process.stdout + process.stderr + (log.read_text(encoding='utf-8', errors='replace') if log.exists() else '')
+                missing_cache = any(marker in diagnostics.lower() for marker in (
+                    "isn't cached", 'not cached', 'not found in cache',
+                    'not available in cache', "couldn't open", 'could not find',
+                    'failed to open', 'failed to load the format'))
+                if missing_cache:
+                    process = run_compile(command)
         except subprocess.TimeoutExpired:
             return {'ok': False, 'revision': revision, 'build_id': build_id, 'source_saved': True,
                     'error': '编译超过 600 秒，已停止本次编译进程，草稿已保存。首次生成可能需要几分钟下载排版资源；请先在终端完成 setup.py 和样例编译，再重试。'}
@@ -142,7 +183,9 @@ class EditorHandler(BaseHTTPRequestHandler):
         self.send_header('Cache-Control', 'no-store')
         self.send_header('X-Content-Type-Options', 'nosniff')
         self.send_header('Referrer-Policy', 'no-referrer')
-        self.send_header('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'")
+        # ByteMD injects editor styles; image export clones those styles inline.
+        # Scripts remain external and same-origin, with no eval permission.
+        self.send_header('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'")
         if attachment:
             self.send_header('Content-Disposition', f'attachment; filename="{attachment}"')
         self.end_headers()
@@ -165,11 +208,13 @@ class EditorHandler(BaseHTTPRequestHandler):
         path = urlsplit(self.path).path
         if path == '/api/session':
             self.send_json(200, {'token': self.state.token, 'source': self.state.draft.read_text(encoding='utf-8'),
-                                 'source_name': 'resume.md', 'default_pages': self.state.pages, 'logos': self.state.logos()})
+                                 'source_name': 'resume.md', 'default_pages': self.state.pages, 'font_size': self.state.font_size, 'logos': self.state.logos()})
         elif path == '/api/draft':
             self.serve_file(self.state.draft, 'resume.md')
-        elif path in {'/', '/index.html', '/editor/app.js', '/editor/styles.css'}:
+        elif path in {'/', '/index.html', '/editor/styles.css', '/editor/bundle.js', '/editor/bundle.css', '/editor/resume.css'}:
             self.serve_file(SKILL / 'assets/editor' / ('index.html' if path == '/' else path.rsplit('/', 1)[-1]))
+        elif path in {'/assets/fonts/NotoSansSC-Regular.ttf', '/assets/fonts/NotoSansSC-Bold.ttf'}:
+            self.serve_file(SKILL / 'assets/fonts' / path.rsplit('/', 1)[-1])
         elif path.startswith('/assets/logos/'):
             name = path.removeprefix('/assets/logos/')
             allowed = {item['file'] for item in self.state.logos()}
@@ -179,11 +224,25 @@ class EditorHandler(BaseHTTPRequestHandler):
             self.serve_file(SKILL / 'assets/logos' / name)
         elif path.startswith('/builds/'):
             import re
-            match = re.fullmatch(r'/builds/([a-f0-9]{32})/(resume\.pdf|preview-\d+\.png)', path)
+            match = re.fullmatch(r'/builds/([a-f0-9]{32})/(resume\.pdf|preview-\d+\.png|previews\.zip)', path)
             if not match:
                 self.send_json(404, {'error': 'Not found'})
                 return
-            self.serve_file(self.state.builds / match[1] / match[2], 'resume.pdf' if match[2] == 'resume.pdf' else None)
+            if match[2] == 'previews.zip':
+                directory = self.state.builds / match[1]
+                previews = sorted((p for p in directory.glob('preview-*.png') if re.fullmatch(r'preview-\d+\.png', p.name) and p.is_file()),
+                                  key=lambda p: int(p.stem.split('-')[-1]))
+                if not previews:
+                    self.send_json(404, {'error': 'Not found'})
+                    return
+                archive = io.BytesIO()
+                with zipfile.ZipFile(archive, 'w', compression=zipfile.ZIP_DEFLATED) as package:
+                    for preview in previews:
+                        package.write(preview, preview.name)
+                self.send_bytes(200, archive.getvalue(), 'application/zip', 'resume-previews.zip')
+                return
+            attachment = match[2] if match[2] == 'resume.pdf' or parse_qs(urlsplit(self.path).query).get('download') == ['1'] else None
+            self.serve_file(self.state.builds / match[1] / match[2], attachment)
         else:
             self.send_json(404, {'error': 'Not found'})
 
@@ -191,7 +250,8 @@ class EditorHandler(BaseHTTPRequestHandler):
         if not self.trusted_request() or not hmac.compare_digest(self.headers.get('X-Session-Token', '').encode('utf-8'), self.state.token.encode('utf-8')):
             self.send_json(403, {'error': 'Invalid local editor session'})
             return
-        if urlsplit(self.path).path != '/api/build':
+        endpoint = urlsplit(self.path).path
+        if endpoint not in {'/api/build', '/api/save'}:
             self.send_json(404, {'error': 'Not found'})
             return
         if self.headers.get('Content-Type', '').split(';')[0].strip() != 'application/json':
@@ -202,21 +262,26 @@ class EditorHandler(BaseHTTPRequestHandler):
             if length < 1 or length > MAX_REQUEST:
                 raise ValueError('Request is too large or empty')
             data = json.loads(self.rfile.read(length))
-            source, pages, revision = data['source'], data['pages'], data['revision']
-            if not isinstance(source, str) or not source.strip() or len(source.encode('utf-8')) > MAX_SOURCE:
-                raise ValueError('Draft must contain 1–200000 UTF-8 bytes')
-            if type(pages) is not int or not 1 <= pages <= 20:
-                raise ValueError('Expected page count must be 1–20')
+            source, revision = data['source'], data['revision']
+            pages = validate_pages(data['pages']) if 'pages' in data else None
+            font_size = validate_font_size(data['font_size']) if 'font_size' in data else None
+            if not isinstance(source, str) or len(source.encode('utf-8')) > MAX_SOURCE:
+                raise ValueError('Draft must contain at most 200000 UTF-8 bytes')
+            if endpoint == '/api/build':
+                if not source.strip():
+                    raise ValueError('Draft must contain 1–200000 UTF-8 bytes')
+                pages = validate_pages(data['pages'])
+                font_size = 10.5 if font_size is None else font_size
             if type(revision) is not int or revision < 0:
                 raise ValueError('Invalid draft revision')
         except (ValueError, KeyError, TypeError, UnicodeError) as error:
             self.send_json(400, {'error': str(error)})
             return
         if not self.state.lock.acquire(blocking=False):
-            self.send_json(409, {'error': 'A build is running; try again when it finishes'})
+            self.send_json(409, {'error': 'A save or build is running; try again when it finishes'})
             return
         try:
-            result = self.state.compile(source, pages, revision)
+            result = self.state.save(source, revision, pages, font_size) if endpoint == '/api/save' else self.state.compile(source, pages, revision, font_size)
             self.send_json(200 if result['ok'] else 400, result)
         except (OSError, ValueError, subprocess.SubprocessError) as error:
             try:

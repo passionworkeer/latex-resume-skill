@@ -11,7 +11,7 @@ Deliver a resume the user can keep editing: authoritative content, editable layo
 
 - **Review or improve content:** read [content-interview.md](references/content-interview.md). Inspect the supplied resume and available authorized evidence first, then ask only questions whose answers materially improve the draft. Work on supported edits while awaiting answers.
 - **Recreate a PDF/PNG template:** read [reference-reconstruction.md](references/reference-reconstruction.md). Measure the supplied reference and reconstruct actual LaTeX layout; the bundled template is a starting point, not a substitute for matching the requested design.
-- **Let the user edit manually:** read [editor.md](references/editor.md), set up dependencies, and launch `scripts/preview.py` in a private workspace using the system default external browser. Explain explicit generation, saved drafts, stale previews, and Markdown/PDF downloads.
+- **Let the user edit manually:** read [editor.md](references/editor.md), set up dependencies, and launch `scripts/preview.py` in a private workspace using the system default external browser. Explain the default 650ms idle-triggered LaTeX build, saved drafts/settings, stale previews, and Markdown/PDF/PNG exports. ByteMD 1.21.0 is bundled under MIT; end users need no Node. Automatically install Python dependencies through setup.py first. LaTeX is the only layout source; preview images come from its actual PDF, and initial resource downloads may take longer than later builds. Users edit Markdown content/bold and body font size (9–12 pt in 0.5 pt steps); headings and layout stay fixed. Font size and page count persist in workspace editor-settings.json and are absent from exported Markdown. Enable PDF/PNG exports only for the current validated version; edits invalidate old exports. Single-page PNG downloads directly, multiple pages download as ZIP.
 - **Find or insert a logo:** read [logos.md](references/logos.md), search the local catalogue by name/ID, and use its supported inline token alongside visible text. Match the actual product/company mark and check the source and brand-use terms; do not infer experience or affiliation from a logo.
 - **Build, edit, or deliver:** follow [workflow.md](references/workflow.md) for dependency setup, generation, content checks, rendering, and visual review.
 
@@ -43,3 +43,7 @@ python3 skills/latex-resume/scripts/setup.py
 ```
 
 See [source-format.md](references/source-format.md) for the supported Markdown syntax and [environment.md](references/environment.md) for platform setup. Use script `--help` to discover current optional flags. Resolve the skill's actual directory when installed elsewhere rather than assuming the repository-relative path. Keep all source, font/license, and template files necessary to rebuild the result with the delivery.
+
+## Frontend maintenance
+
+Edit `frontend/editor.js`, then run `npm ci`, `npm run build`, and `npm test` from the repository root. Ship the generated editor `bundle.js`/`bundle.css`, complete frontend licenses and notices in source ZIPs; do not require end users to build the editor. See repository `docs/LIVE-EDITOR-RESEARCH.md` and `docs/TEA-DESIGN.md` for research and design decisions.

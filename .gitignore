@@ -15,3 +15,5 @@ skills/latex-resume/assets/fonts/
 *.log
 *.xdv
 *.synctex.gz
+
+node_modules/

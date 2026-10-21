@@ -1,0 +1,85 @@
+{
+  "sources": [
+    {
+      "file": "micromark-LICENSE.txt",
+      "url": "https://raw.githubusercontent.com/micromark/micromark/94b7679646bc0221899bba034f52f4abb3700f81/license",
+      "commit": "94b7679646bc0221899bba034f52f4abb3700f81",
+      "sha256": "536804b3adbff17dbbb9ed0d2bf9655b78f07640278581e37e3d7475282d5e61",
+      "packages": [
+        "micromark@3.2.0",
+        "micromark-core-commonmark@1.1.0",
+        "micromark-factory-destination@1.1.0",
+        "micromark-factory-label@1.1.0",
+        "micromark-factory-space@1.1.0",
+        "micromark-factory-title@1.1.0",
+        "micromark-factory-whitespace@1.1.0",
+        "micromark-util-character@1.2.0",
+        "micromark-util-chunked@1.1.0",
+        "micromark-util-classify-character@1.1.0",
+        "micromark-util-combine-extensions@1.1.0",
+        "micromark-util-decode-numeric-character-reference@1.1.0",
+        "micromark-util-decode-string@1.1.0",
+        "micromark-util-encode@1.1.0",
+        "micromark-util-html-tag-name@1.2.0",
+        "micromark-util-normalize-identifier@1.1.0",
+        "micromark-util-resolve-all@1.1.0",
+        "micromark-util-sanitize-uri@1.2.0",
+        "micromark-util-subtokenize@1.1.0",
+        "micromark-util-symbol@1.1.0",
+        "micromark-util-types@1.1.0"
+      ],
+      "note": ""
+    },
+    {
+      "file": "rehype-stringify-LICENSE.txt",
+      "url": "https://raw.githubusercontent.com/rehypejs/rehype/e97afa10064b47d5861ae1c5d3e09dc68a043302/license",
+      "commit": "e97afa10064b47d5861ae1c5d3e09dc68a043302",
+      "sha256": "8bcb6db133b417da60891d74be6ce583162ba9143be32ccc9e24cea7913ead14",
+      "packages": [
+        "rehype-stringify@9.0.4"
+      ],
+      "note": ""
+    },
+    {
+      "file": "word-count-README.md",
+      "url": "https://raw.githubusercontent.com/yuehu/word-count/3ede366e08b285356857787d60ac8da766360520/Readme.md",
+      "commit": "3ede366e08b285356857787d60ac8da766360520",
+      "sha256": "a7a56df450dcd54d4469dca1d1a4354bfc553b2f422e9a7542bbb6917c6d897c",
+      "packages": [
+        "word-count@0.2.2"
+      ],
+      "note": "Upstream declares MIT but does not ship full terms; preserve declaration verbatim."
+    },
+    {
+      "file": "word-count-index.js",
+      "url": "https://raw.githubusercontent.com/yuehu/word-count/3ede366e08b285356857787d60ac8da766360520/index.js",
+      "commit": "3ede366e08b285356857787d60ac8da766360520",
+      "sha256": "8762787d1888f8428330c80e21477d7d22b0b262b99bb9f0860b5dc1d11e9081",
+      "packages": [
+        "word-count@0.2.2"
+      ],
+      "note": "Upstream copyright evidence, preserved verbatim."
+    },
+    {
+      "file": "MIT-standard.txt",
+      "url": "https://raw.githubusercontent.com/spdx/license-list-data/d46e94e2c78ceede1cfc63cfa0396472d2798d4c/text/MIT.txt",
+      "commit": "d46e94e2c78ceede1cfc63cfa0396472d2798d4c",
+      "sha256": "b05785f9f18e6716bab63424b11454513b9943a222595b70411009202fc592b5",
+      "packages": [],
+      "note": "Standard MIT terms, NOT a verbatim word-count license file. Used with upstream MIT declaration and copyright."
+    },
+    {
+      "file": "word-count-NOTICE.txt",
+      "sha256": "bf8c38a870d23c923d33fc6dc9da64312b1c5848be381fb7c323632666bb060c",
+      "packages": [
+        "word-count@0.2.2"
+      ],
+      "derived_from": [
+        "word-count-README.md",
+        "word-count-index.js",
+        "MIT-standard.txt"
+      ],
+      "note": "Transparent assembled notice; no invented upstream full-license claim."
+    }
+  ]
+}

@@ -5,3 +5,10 @@
 *.yml text eol=lf
 *.pdf binary
 *.png binary
+*.js text eol=lf
+*.mjs text eol=lf
+*.css text eol=lf
+*.json text eol=lf
+*.txt text eol=lf
+# Bundled dependencies contain significant tabs inside multiline string literals.
+skills/latex-resume/assets/editor/bundle.js whitespace=-blank-at-eol

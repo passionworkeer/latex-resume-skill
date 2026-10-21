@@ -17,6 +17,19 @@ verify = load('verify')
 
 
 class MarkdownTests(unittest.TestCase):
+    def test_body_font_size_preserves_fixed_template_headings(self):
+        for size in [9, 9.5, 10, 10.5, 11, 11.5, 12]:
+            tex, _ = build.convert('# Name\n## Experience\n- Work', size)
+            self.assertIn(r'\fontsize{' + f'{size:g}' + '}{', tex)
+            self.assertIn(r'\fontsize{12}{16}', tex)
+            self.assertIn(r'\fontsize{16}{21}', tex)
+            self.assertNotIn('%%FONT_SIZE%%', tex)
+            self.assertNotIn('%%LINE_HEIGHT%%', tex)
+        self.assertIn(r'\fontsize{10.5}{13.8}', build.convert('# Name')[0])
+        for size in [True, '10.5', 8.5, 12.5, 10.1, float('nan'), float('inf')]:
+            with self.assertRaises(ValueError):
+                build.convert('# Name', size)
+
     def test_unicode_and_visible_link_text(self):
         tex, expected = build.convert('# 示例 Ω\n邮箱 · [主页](https://example.com/a?q=1&b=2)\n## 经历\n### 机构 | 开发者 | 2025–2026\n- **中文**与 café 100%\n')
         self.assertIn('中文与 café 100%', expected)
