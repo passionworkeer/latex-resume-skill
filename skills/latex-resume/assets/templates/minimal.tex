@@ -23,7 +23,7 @@
 \newcommand{\resumename}[1]{{\centering\fontsize{22}{27}\selectfont\bfseries\color{stronggray}#1\par}\vspace{2pt}}
 \newcommand{\contact}[1]{{\centering #1\par}\vspace{2pt}}
 \newcommand{\entry}[3]{\par\vspace{4pt}\noindent\textbf{#1}\par #2\hfill #3\par\nopagebreak}
-\newcommand{\resumeicon}[1]{\raisebox{-1.5pt}{\includegraphics[height=10.5pt,width=28pt,keepaspectratio]{logos/#1.pdf}}\hspace{3pt}}
+\newcommand{\resumeicon}[2][10.5]{\raisebox{-1.5pt}{\includegraphics[height=#1pt,width=\dimexpr #1pt*8/3\relax,keepaspectratio]{logos/#2.pdf}}\hspace{3pt}}
 \hyphenpenalty=10000
 \exhyphenpenalty=10000
 \emergencystretch=3em

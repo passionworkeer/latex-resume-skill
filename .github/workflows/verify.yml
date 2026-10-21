@@ -34,7 +34,7 @@ jobs:
           if [ "$RUNNER_OS" = Windows ]; then PY=.venv/Scripts/python.exe; else PY=.venv/bin/python; fi
           "$PY" -m unittest discover -s tests -v
           for TEMPLATE in classic minimal two-column; do
-            for LANG in zh en; do
+            for LANG in zh en styles; do
               "$PY" skills/latex-resume/scripts/build.py --source "skills/latex-resume/assets/templates/example-$LANG.md" --template "$TEMPLATE" --output "output/$TEMPLATE-$LANG"
             done
           done

@@ -18,7 +18,7 @@ verify = load('verify')
 
 class MarkdownTests(unittest.TestCase):
     def test_body_font_size_preserves_fixed_template_headings(self):
-        for size in [9, 9.5, 10, 10.5, 11, 11.5, 12]:
+        for size in [8, 8.5, 9, 10.5, 12, 15.5, 18]:
             tex, _ = build.convert('# Name\n## Experience\n- Work', size)
             self.assertIn(r'\fontsize{' + f'{size:g}' + '}{', tex)
             self.assertIn(r'\fontsize{12}{16}', tex)
@@ -26,7 +26,7 @@ class MarkdownTests(unittest.TestCase):
             self.assertNotIn('%%FONT_SIZE%%', tex)
             self.assertNotIn('%%LINE_HEIGHT%%', tex)
         self.assertIn(r'\fontsize{10.5}{13.8}', build.convert('# Name')[0])
-        for size in [True, '10.5', 8.5, 12.5, 10.1, float('nan'), float('inf')]:
+        for size in [True, '10.5', 7.5, 18.5, 10.1, float('nan'), float('inf')]:
             with self.assertRaises(ValueError):
                 build.convert('# Name', size)
 
@@ -48,6 +48,41 @@ class MarkdownTests(unittest.TestCase):
         for source in ['text', '# A\n# B', '# A\n## B\n### only title', '# A\n## B\n- **open', '# A\n## B\n1. numbered', '# A\n## B\n  - nested', '# A\n## B\n![image](https://example.com)', '# A\n## B\n`code`', '# A\n## B\n[label](javascript:bad)']:
             with self.subTest(source=source), self.assertRaises(ValueError):
                 build.convert(source)
+
+    def test_inline_sizes_bold_and_escaped_literal_text(self):
+        tex, visible = build.inline(r'<size:16>中文**重点<size:12.5>小字</size>**尾</size> **粗<size:20>大字</size>**')
+        self.assertEqual(visible, '中文重点小字尾 粗大字')
+        for fragment in [r'\fontsize{16}{', r'\fontsize{12.5}{', r'\fontsize{20}{', r'\textbf{']:
+            self.assertIn(fragment, tex)
+        text = r'\*\[\]\\\<\>\|\#\`\!\{\}\_\~'
+        tex, visible = build.inline(text)
+        self.assertEqual(visible, '*[]\\<>|#`!{}_~')
+        self.assertIn(r'\textbackslash{}', tex)
+        _, expected = build.convert(r'# Name' + '\n## Work\n' + r'### A\|B | C\\ | 2026' + '\n- ' + text)
+        self.assertIn('A|B C\\ 2026', expected)
+        self.assertIn(visible, expected)
+        self.assertIn('ordinary text', build.convert('# Name\n## Work\n   ordinary text')[1])
+
+    def test_inline_sizes_bounds_and_nesting_are_strict(self):
+        for size in ['8', '8.5', '32']:
+            self.assertEqual(build.inline(f'<size:{size}>text</size>')[1], 'text')
+        for token in ['<size:7.5>x</size>', '<size:32.5>x</size>', '<size:12.1>x</size>',
+                      '<size:nan>x</size>', '<size:12>x', '<size:12></size>',
+                      '**<size:12>x**</size>', '<script>x</script>', '</size>',
+                      '<size:12>' * 17 + 'x' + '</size>' * 17]:
+            with self.subTest(token=token), self.assertRaises(ValueError):
+                build.inline(token)
+        self.assertEqual(build.inline('<size:12>' * 16 + 'x' + '</size>' * 16)[1], 'x')
+
+    def test_links_support_formatted_labels_mailto_and_escaped_parentheses(self):
+        tex, visible = build.inline(r'[**<size:12>联系\[我\]</size>**](mailto:a@example.com) [项目](https://example.com/a\(b\))')
+        self.assertEqual(visible, '联系[我] 项目')
+        self.assertIn(r'\href{mailto:a@example.com}', tex)
+        self.assertIn(r'\href{https://example.com/a(b)}', tex)
+        for token in ['[x](javascript:alert)', '[x](https://example.com/a(b))', '[x](https://example.com/\\evil)',
+                      '[<size:12>' * 17 + 'x' + '</size>](https://example.com)' * 17]:
+            with self.subTest(token=token), self.assertRaises(ValueError):
+                build.inline(token)
 
     def test_whitespace_bullets_only_are_ignored(self):
         self.assertTrue(verify.compare('中文 A\nB', '中文 • A B')['exact_text_match'])

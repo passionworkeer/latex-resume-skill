@@ -11,6 +11,6 @@ test('switching templates invalidates an otherwise current export',()=>{
  assert.equal(currentArtifact({...state,templateId:'minimal'}),false);
 });
 test('font sizes and page target match the LaTeX interface',()=>{
- for(const size of [9,9.5,10,10.5,11,11.5,12])assert.equal(validSettings({pages:1,font_size:size}),true);
- for(const change of [{font_size:8},{font_size:12.5},{font_size:10.2},{font_size:NaN},{pages:0},{pages:1.5},{pages:21}])assert.equal(validSettings({pages:1,font_size:10.5,...change}),false);
+ for(const size of [8,9,9.5,10,10.5,11,11.5,12,16,18])assert.equal(validSettings({pages:1,font_size:size}),true);
+ for(const change of [{font_size:7.5},{font_size:18.5},{font_size:10.2},{font_size:NaN},{pages:0},{pages:1.5},{pages:21}])assert.equal(validSettings({pages:1,font_size:10.5,...change}),false);
 });

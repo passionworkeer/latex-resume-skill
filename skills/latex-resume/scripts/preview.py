@@ -39,8 +39,8 @@ def validate_template_id(value):
 
 
 def validate_font_size(value):
-    if type(value) not in (int, float) or not math.isfinite(value) or not 9 <= value <= 12 or value * 2 != int(value * 2):
-        raise ValueError('Font size must be 9–12 in steps of 0.5')
+    if type(value) not in (int, float) or not math.isfinite(value) or not 8 <= value <= 18 or value * 2 != int(value * 2):
+        raise ValueError('Font size must be 8–18 in steps of 0.5')
     return float(value)
 
 

@@ -19,22 +19,22 @@
 ```
 
 - 必须以唯一的 `# 姓名` 开始；节标题前的普通文本作为居中联系方式。
-- `## 节标题`；`### 机构或项目 | 职责或角色 | 日期` 恰好三列，用 ASCII `|` 分隔。
+- `## 节标题`；`### 机构或项目 | 职责或角色 | 日期` 恰好三列，用未转义的 ASCII `|` 分隔；字段中的字面竖线写 `\|`。
 - `- 要点`；一行一个普通段落；空行用于源码可读性。
-- 支持 `**加粗**` 和 `[文字](https://example.com)`，不支持嵌套加粗/链接。链接只允许 HTTP(S)，邮箱可先写纯文本。
+- 支持 `**加粗**`、`<size:12>选区文字</size>` 和 `[文字](https://example.com)` / `[邮箱](mailto:a@example.com)`。选区字号为 8–32 pt，步进 0.5，可与加粗互相嵌套，最多 16 层；字号标签必须闭合且非空。链接标签也可用加粗和字号，禁止嵌套链接。URL 中的字面括号写 `\(`、`\)`。
 - 只把链接的可见标签计入正文对照；PDF 链接目标需另行检查。
-- 支持本地图标的特殊内联语法 `![logo:github]`，例如 `### ![logo:github] 示例开源项目 | 贡献者 | 2025.01 - 2025.03`。它是装饰图标，必须保留同一行的可见文字，不能用图标组成空文本行；图标不计入正文对照。ID 仅可来自本地清单，未知 ID 会报错。名称、来源和许可边界见 [logos.md](logos.md)。
+- 支持本地图标的特殊内联语法 `![logo:github]`（默认 10.5 pt）或 `![logo:bupt@20]`（该枚图标为 20 pt），尺寸为 8–48 pt，步进 0.5，例如 `### ![logo:github] 示例开源项目 | 贡献者 | 2025.01 - 2025.03`。它是装饰图标，必须保留同一行的可见文字，不能用图标组成空文本行；图标不计入正文对照。ID 仅可来自本地清单，未知 ID 会报错。名称、来源和许可边界见 [logos.md](logos.md)。
 - 不支持一般 Markdown 图片（如 `![描述](URL)`）、HTML、表格、代码、嵌套列表或原始 TeX。脚本遇到不支持的语法会报行号，不静默丢弃。
-- 所有文本字符做 TeX 转义，输入中的反斜杠不会变成可执行命令。
+- ASCII 标点可用反斜杠转成字面文字，例如 `\*`、`\[`、`\]`、`\\`、`\<`、`\>`、`\|`、`\#`；可视化编辑器自动处理这些转义。未知反斜杠序列按字面保留。所有文本字符继续做 TeX 转义，不执行输入中的 TeX。
 - 默认模板使用同一字体和字号支持中英文；英文示例是独立虚构内容，不会自动翻译中文。
 
 内容源是 Markdown；样式源是 `assets/templates/resume.tex`。生成的 `output/.../resume.tex` 供查看、交付或作为新的自定义模板起点，常规改稿仍应回到 Markdown 和样式源。
 
 ## 本地实时编辑
 
-运行 `scripts/preview.py --workspace private/editor`，可在系统默认外部浏览器通过已打包的 ByteMD 1.21.0 编辑此格式、搜索插入图标，默认停顿 650ms 后自动调用 LaTeX 生成实际 PDF/逐页 PNG。编译可能需数秒，首次资源下载更慢；不使用浏览器 HTML 排版。使用 [editor.md](editor.md) 中的命令和保存规则。
+运行 `scripts/preview.py --workspace private/editor`，可在系统默认外部浏览器通过已打包的可视化编辑器编辑内容、搜索插入图标，默认停顿 650ms 后自动调用 LaTeX 生成实际 PDF/逐页 PNG。编译可能需数秒，首次资源下载更慢；不使用浏览器 HTML 排版。使用 [editor.md](editor.md) 中的命令和保存规则。
 
-编辑器仅开放正文、加粗与正文字号（9–12 pt，步进 0.5 pt，默认 10.5 pt）；标题样式与布局固定。字号和预期页数持久保存到工作区 `editor-settings.json`，导出 Markdown 只含正文，不含字体和页数设置。当前版本校验成功才可导出 PDF / PNG，编辑后旧产物过期并禁用；单页 PNG 直接下载，多页 PNG 以 ZIP 下载。
+编辑器支持正文、加粗、选区字号和独立图标尺寸。全局正文字号为 8–18 pt，步进 0.5 pt，默认 10.5 pt。全局字号、模板和预期页数保存到工作区 `editor-settings.json`；选区字号和图标尺寸直接保存在 Markdown，导出后可恢复。当前版本校验成功才可导出 PDF / PNG，编辑后旧产物过期并禁用；单页 PNG 直接下载，多页 PNG 以 ZIP 下载。
 
 ## 构建
 
@@ -48,10 +48,12 @@
 参数：
 
 - `--engine auto|tectonic|xelatex`：优先本地 `.tools/bin/tectonic`，然后 PATH；自动模式优先 Tectonic。
+- `--font-size N`：全局正文字号，8–18 pt，步进 0.5，默认 10.5。
+- `--template classic|minimal|two-column`：选择注册模板，默认 classic。
 - `--pages N`：期望页数，默认 1；页数不符会失败，不会自动删除内容。
 - `--bundle URL_OR_PATH`：Tectonic 资源 bundle，默认 `https://data1b.fullyjustified.net/tlextras-2022.0r0.tar`，沿用已验证流程。可指定可信本地文件；XeLaTeX 忽略此项。
 
-输出包括 `resume.pdf`、`resume.tex`、`fonts/` 和许可、`expected-text.txt`、`resume.log`、`build.log`、`verification.json`、提取文本与 `preview-*.png`；使用图标时另有 `logos/`，包含用到的 SVG、转换后的矢量 PDF、来源清单及上游许可/免责声明。生成目录应独立，不得与原稿所在目录相同或放进已安装 skill 中。机器检查失败返回非零状态；报告中的 `visual_status` 始终待人工/agent 看图确认，不伪造视觉 PASS。
+输出包括 `resume.pdf`、`resume.tex`、`fonts/` 和许可、`expected-text.txt`、`resume.log`、`build.log`、`verification.json`、提取文本与 `preview-*.png`；使用图标时另有 `logos/`，包含用到的 SVG、转换后的矢量 PDF、来源清单及上游许可/免责声明。使用学校校徽时，学校来源、权利说明和上游集合许可分别附带为 `logos/SCHOOL-SOURCES.json`、`logos/SCHOOL-RIGHTS.md`、`logos/SCHOOL-LICENSE.upstream-collection.txt`；这些是原 `assets/logos/schools/` 文件的保留副本，原文中的相对文件名对应上述加前缀文件。生成目录应独立，不得与原稿所在目录相同或放进已安装 skill 中。机器检查失败返回非零状态；报告中的 `visual_status` 始终待人工/agent 看图确认，不伪造视觉 PASS。
 
 ## 独立、自定义模板验证
 

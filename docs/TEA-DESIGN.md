@@ -4,7 +4,7 @@
 
 ## 选型与公开复用边界
 
-本轮保留原生 HTML/CSS/JavaScript 工作台，编辑内核可独立复用许可明确的 ByteMD；视觉与交互独立实现。无需为两个面板、工具栏和导出按钮引入 React。以下是本项目建议值，**不是经过核验的 Tea 官方 design token**，也不是 Tea 样式文件的复制品。
+本轮保留原生 HTML/CSS/JavaScript 工作台，v0.5 编辑内核复用 MIT 许可的 Tiptap；视觉与交互独立实现。无需为两个面板、工具栏和导出按钮引入 React。以下是本项目建议值，**不是经过核验的 Tea 官方 design token**，也不是 Tea 样式文件的复制品。
 
 - [Tea 官网](https://tea.tencent.com/)与[组件目录](https://tea.tencent.com/component)可用于理解一致的控件语义；[按钮](https://tea.tencent.com/component/button)、[间距](https://tea.tencent.com/component/space)、[状态](https://tea.tencent.com/component/status)、[布局](https://tea.tencent.com/component/layout)是相关参考入口。本次检索工具无法读取这些动态页面，不能声称已核验官网当前像素值或 API。
 - [公开 tea-component 仓库](https://github.com/tea-design/tea-component)介绍 React 组件和 CSS 导入；[npm 页面](https://www.npmjs.com/package/tea-component)及[registry 元数据](https://registry.npmjs.org/tea-component/latest)当前显示版本 2.8.0、`license: UNLICENSED`、React / React DOM >=16.8.0。因此不将包、打包 CSS、字体或图标引入本开源项目。公开可访问不等于存在开源再分发授权。GitHub 页面未呈现许可文件；GitHub license API 本次受限，不能推断拥有额外许可。

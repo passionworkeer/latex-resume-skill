@@ -1,5 +1,7 @@
 # LaTeX 唯一排版来源：实时编辑开源复用调研
 
+> v0.5 已改用 Tiptap 可视化编辑。下文保留 v0.3 Markdown 编辑阶段的选型记录；当前方案见 [RICH-EDITOR.md](RICH-EDITOR.md)。
+
 核对日期：2026-10-21。用户已明确：Markdown 只负责文字、字号和加粗等内容/样式输入，LaTeX 是唯一排版来源，最终 PDF 与 PNG 必须来自同一 LaTeX 编译结果。因此取消独立 HTML Viewer、HTML 简历模板与浏览器打印作为主路线；此前这类候选不满足当前要求。
 
 ## 推荐路径

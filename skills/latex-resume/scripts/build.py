@@ -7,6 +7,7 @@ from pathlib import Path
 import re
 import shutil
 import subprocess
+import string
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -20,51 +21,123 @@ def escape(text):
     return ''.join(mapping.get(c, c) for c in text)
 
 
-def inline(text):
-    """Return LaTeX and visible text; reject ambiguous Markdown constructs."""
-    tex, plain = [], []
-    i = 0
+ESCAPABLE = frozenset(string.punctuation)
+MAX_INLINE_DEPTH = 16
+
+
+def dimension(value, minimum, maximum):
+    if not re.fullmatch(r'\d+(?:\.\d+)?', value):
+        raise ValueError('Invalid inline size')
+    number = float(value)
+    if not minimum <= number <= maximum or number * 2 != int(number * 2):
+        raise ValueError(f'Inline size must be {minimum}–{maximum} in steps of 0.5')
+    return f'{number:g}'
+
+
+def split_entry(text):
+    """Split only unescaped pipes; keep escapes for the inline parser."""
+    fields, start, i = [], 0, 0
     while i < len(text):
-        if text.startswith('![logo:', i):
-            from logos import TOKEN, catalogue
-            match = TOKEN.match(text, i)
-            if not match or match[1] not in catalogue():
-                raise ValueError('Unknown or malformed logo; see references/logos.md')
-            tex.append(r'\resumeicon{' + match[1] + '}')
-            i = match.end()
-        elif text.startswith('**', i):
-            end = text.find('**', i + 2)
-            if end < 0 or end == i + 2:
-                raise ValueError('Unclosed or empty bold span')
-            value = text[i + 2:end]
-            if any(c in value for c in '*[]`'):
-                raise ValueError('Nested inline syntax is unsupported')
-            tex.append(r'\textbf{' + escape(value) + '}')
-            plain.append(value)
-            i = end + 2
-        elif text[i] == '[':
-            match = re.match(r'\[([^\[\]\n]+)\]\((https?://[^\s()]+)\)', text[i:])
-            if not match:
-                raise ValueError('Links must use [label](https://...) without spaces or parentheses in URL')
-            label, url = match.groups()
-            if any(c in label for c in '*`') or any(c in url for c in '\\{}'):
-                raise ValueError('Unsupported syntax in link')
-            tex.append(r'\href{' + escape(url) + '}{' + escape(label) + '}')
-            plain.append(label)
-            i += match.end()
-        else:
-            c = text[i]
-            if c in '*]`' or text.startswith('![', i) or c in '<>':
-                raise ValueError('Unsupported Markdown syntax; use plain text, **bold**, or links')
-            tex.append(escape(c))
-            plain.append(c)
-            i += 1
-    return ''.join(tex), ''.join(plain)
+        if text[i] == '\\' and i + 1 < len(text) and text[i + 1] in ESCAPABLE:
+            i += 2
+            continue
+        if text[i] == '|':
+            fields.append(text[start:i])
+            start = i + 1
+        i += 1
+    return fields + [text[start:]]
+
+
+def inline(text, _depth=0, _allow_links=True):
+    """Parse the bounded inline grammar while retaining every visible character."""
+    from logos import TOKEN, catalogue
+    entries = None
+
+    def parse(start=0, stop=None, depth=0, allow_links=True):
+        nonlocal entries
+        if depth > MAX_INLINE_DEPTH:
+            raise ValueError('Inline nesting exceeds 16 levels')
+        tex, plain, i = [], [], start
+        while i < len(text):
+            if stop and text.startswith(stop, i):
+                if not tex:
+                    raise ValueError('Empty inline span')
+                return ''.join(tex), ''.join(plain), i + len(stop)
+            if text[i] == '\\' and i + 1 < len(text) and text[i + 1] in ESCAPABLE:
+                tex.append(escape(text[i + 1]))
+                plain.append(text[i + 1])
+                i += 2
+            elif text.startswith('![logo:', i):
+                match = TOKEN.match(text, i)
+                if entries is None:
+                    entries = catalogue()
+                if not match or match[1] not in entries:
+                    raise ValueError('Unknown or malformed logo; see references/logos.md')
+                size = dimension(match[2], 8, 48) if match[2] else None
+                tex.append(r'\resumeicon' + ('[' + size + ']' if size else '') + '{' + match[1] + '}')
+                i = match.end()
+            elif text.startswith('**', i):
+                value, visible, i = parse(i + 2, '**', depth + 1, allow_links)
+                tex.append(r'\textbf{' + value + '}')
+                plain.append(visible)
+            elif text.startswith('<size:', i):
+                match = re.match(r'<size:([^<>]+)>', text[i:])
+                if not match:
+                    raise ValueError('Malformed size span')
+                size = dimension(match[1], 8, 32)
+                value, visible, i = parse(i + match.end(), '</size>', depth + 1, allow_links)
+                tex.append(r'{\fontsize{' + size + '}{' + f'{float(size) * (13.8 / 10.5):.2f}'.rstrip('0').rstrip('.') + r'}\selectfont ' + value + '}')
+                plain.append(visible)
+            elif text[i] == '[' and allow_links:
+                end = i + 1
+                while end < len(text):
+                    if text[end] == '\\' and end + 1 < len(text) and text[end + 1] in ESCAPABLE:
+                        end += 2
+                        continue
+                    if text.startswith('](', end):
+                        break
+                    end += 1
+                url_start = end + 2
+                cursor, url = url_start, []
+                while cursor < len(text) and text[cursor] != ')':
+                    char = text[cursor]
+                    if char == '\\' and cursor + 1 < len(text) and text[cursor + 1] in ESCAPABLE:
+                        cursor += 1
+                        char = text[cursor]
+                    elif char == '(':
+                        raise ValueError('URL parentheses must be escaped')
+                    if char.isspace() or char in '{}\\':
+                        raise ValueError('Unsupported URL character')
+                    url.append(char)
+                    cursor += 1
+                url = ''.join(url)
+                if cursor >= len(text) or not re.match(r'^(?:https?://|mailto:)[^\s]+$', url, re.I):
+                    raise ValueError('Links must use HTTP(S) or mailto URLs')
+                label = text[i + 1:end]
+                if not label:
+                    raise ValueError('Empty link label')
+                label_tex, label_plain = inline(label, depth + 1, False)
+                tex.append(r'\href{' + escape(url) + '}{' + label_tex + '}')
+                plain.append(label_plain)
+                i = cursor + 1
+            else:
+                c = text[i]
+                if c in '*]`<>' or c == '[' or text.startswith('![', i):
+                    raise ValueError('Unsupported or mismatched inline syntax')
+                tex.append(escape(c))
+                plain.append(c)
+                i += 1
+        if stop:
+            raise ValueError('Unclosed inline span')
+        return ''.join(tex), ''.join(plain), i
+
+    tex, plain, _ = parse(depth=_depth, allow_links=_allow_links)
+    return tex, plain
 
 
 def validate_font_size(value):
-    if type(value) not in (int, float) or not math.isfinite(value) or not 9 <= value <= 12 or value * 2 != int(value * 2):
-        raise ValueError('Font size must be 9–12 in steps of 0.5')
+    if type(value) not in (int, float) or not math.isfinite(value) or not 8 <= value <= 18 or value * 2 != int(value * 2):
+        raise ValueError('Font size must be 8–18 in steps of 0.5')
     return float(value)
 
 
@@ -81,7 +154,7 @@ def convert(source, font_size=10.5, template_id='classic'):
         if not line:
             continue
         try:
-            if raw != raw.lstrip():
+            if raw != raw.lstrip() and re.match(r'^(?:#{1,6}\s|[-+*]\s|>\s|\d+[.)]\s|```|:::|\|)', line):
                 raise ValueError('Indented or nested blocks are unsupported')
             if in_list and not line.startswith('- '):
                 body.append(r'\end{itemize}')
@@ -101,7 +174,7 @@ def convert(source, font_size=10.5, template_id='classic'):
             elif line.startswith('### '):
                 if not seen_section:
                     raise ValueError('Entry headings require a section')
-                fields = line[4:].split('|')
+                fields = split_entry(line[4:])
                 if len(fields) != 3 or any(not f.strip() for f in fields):
                     raise ValueError('Entry heading must be ### Title | Role | Date')
                 parsed = [inline(f.strip()) for f in fields]
@@ -203,8 +276,8 @@ def main():
     license_name = {'classic': 'LICENSE.txt', 'minimal': 'LICENSE.sb2nov.txt', 'two-column': 'LICENSE.latexcv.txt'}[args.template]
     license_paths = ['LICENSE.txt'] if args.template == 'classic' else ['LICENSE.txt', license_name]
     (out / 'TEMPLATE-LICENSE.txt').write_text('\n\n'.join((ROOT / 'assets/templates' / name).read_text(encoding='utf-8') for name in license_paths), encoding='utf-8')
-    from logos import TOKEN, prepare
-    prepare(TOKEN.findall(args.source.read_text(encoding='utf-8')), out)
+    from logos import prepare
+    prepare(re.findall(r'\\resumeicon(?:\[[0-9.]+\])?\{([a-z0-9-]+)\}', tex), out)
     engine, executable = select_engine(args.engine)
     if not executable:
         raise RuntimeError('No requested TeX engine available; run setup first')

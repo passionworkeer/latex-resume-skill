@@ -52,6 +52,34 @@ class LogoTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 logos.resolve_logo_path('bupt.svg')
 
+    def test_bundled_school_wins_over_legacy_local_and_copies_rights(self):
+        public = b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M0 0h24v24H0z"/></svg>'
+        with tempfile.TemporaryDirectory() as folder, tempfile.TemporaryDirectory() as output, patch.object(logos, 'DIRECTORY', Path(folder)):
+            root = Path(folder)
+            (root / 'schools').mkdir()
+            (root / 'local').mkdir()
+            item = {'id': 'bupt', 'file': 'bupt.svg', 'storage': 'schools', 'sha256': hashlib.sha256(public).hexdigest()}
+            (root / 'manifest.json').write_text(json.dumps({'icons': [item]}))
+            (root / 'schools/bupt.svg').write_bytes(public)
+            for name in ['SOURCES.json', 'RIGHTS.md', 'LICENSE.upstream-collection.txt']:
+                (root / 'schools' / name).write_text('school provenance')
+            for name in ['LICENSE.simple-icons.md', 'DISCLAIMER.simple-icons.md']:
+                (root / name).write_text('icon license')
+            (root / 'local/manifest.json').write_text(json.dumps({'icons': [dict(item, sha256='old-download')]}))
+            (root / 'local/bupt.svg').write_bytes(b'legacy private bytes')
+            self.assertEqual(logos.catalogue()['bupt']['storage'], 'schools')
+            self.assertEqual(logos.resolve_logo_path('bupt.svg').read_bytes(), public)
+            logos.prepare(['bupt'], output)
+            self.assertEqual((Path(output) / 'logos/bupt.svg').read_bytes(), public)
+            self.assertEqual((Path(output) / 'logos/SCHOOL-RIGHTS.md').read_text(), 'school provenance')
+            self.assertTrue((Path(output) / 'logos/SCHOOL-SOURCES.json').is_file())
+            self.assertTrue((Path(output) / 'logos/SCHOOL-LICENSE.upstream-collection.txt').is_file())
+            self.assertEqual((root / 'local/bupt.svg').read_bytes(), b'legacy private bytes')
+            (root / 'schools/bupt.svg').unlink()
+            (root / 'schools/bupt.svg').symlink_to(root / 'manifest.json')
+            with self.assertRaises(ValueError):
+                logos.resolve_logo_path('bupt.svg')
+
     def test_logo_is_decorative_and_unknown_ids_fail(self):
         tex, expected = build.convert('# 示例\n## 经历\n### ![logo:github] 示例机构 | 开发 | 2025\n- ![logo:docker] 工具\n')
         self.assertIn(r'\resumeicon{github}', tex)
@@ -65,6 +93,22 @@ class LogoTests(unittest.TestCase):
                 else:
                     with self.assertRaises(ValueError):
                         build.inline(token)
+
+    def test_logo_size_is_independent_and_bounded(self):
+        tex, visible = build.inline('![logo:github@8] small ![logo:github@48] large ![logo:github] default')
+        self.assertIn(r'\resumeicon[8]{github}', tex)
+        self.assertIn(r'\resumeicon[48]{github}', tex)
+        self.assertIn(r'\resumeicon{github}', tex)
+        self.assertEqual(visible, ' small  large  default')
+        self.assertEqual(logos.TOKEN.match('![logo:github@20.5]').groups(), ('github', '20.5'))
+        self.assertEqual(build.inline(r'\!\[logo:github@20\]')[1], '![logo:github@20]')
+        for size in ['7.5', '48.5', '12.1', 'nan', '-10', '10pt', '']:
+            with self.subTest(size=size), self.assertRaises(ValueError):
+                build.inline(f'![logo:github@{size}]')
+        for template_id in ['classic', 'minimal', 'two-column']:
+            tex, _ = build.convert('# Name\n## Work\n- ![logo:github@20.5] Work', template_id=template_id)
+            self.assertIn(r'\newcommand{\resumeicon}[2][10.5]', tex)
+            self.assertIn(r'height=#1pt', tex)
 
     def test_active_or_external_svg_rejected(self):
         for content in ['<svg><script>alert(1)</script></svg>', '<svg onload="run()"/>', '<svg><image href="file:///private"/></svg>', '<svg><path fill="url(https://example.com/x)"/></svg>', '<svg><foreignObject/></svg>', '<!DOCTYPE svg [<!ENTITY x "x">]><svg/>']:

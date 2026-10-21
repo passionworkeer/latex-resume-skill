@@ -173,7 +173,7 @@ class PreviewTests(unittest.TestCase):
 
     def test_font_size_validation_and_persisted_settings(self):
         original = self.state.draft.read_bytes()
-        for value in [True, None, '10.5', 8.5, 12.5, 10.1, float('nan'), float('inf')]:
+        for value in [True, None, '10.5', 7.5, 18.5, 10.1, float('nan'), float('inf')]:
             for endpoint in ['/api/build', '/api/save']:
                 with self.subTest(value=value, endpoint=endpoint):
                     data = {'source': '# changed', 'pages': 1, 'revision': 1, 'font_size': value}
@@ -262,6 +262,16 @@ class PreviewTests(unittest.TestCase):
                      '/assets/templates/thumbnails/minimal.png/extra', '/assets/templates/thumbnails/%6dinimal.png']:
             with self.subTest(path=path):
                 self.assertEqual(self.request(path=path)[0], 404)
+
+    def test_inline_formatting_persists_in_markdown_and_global_font_range(self):
+        source = '# Name\n## Work\n- <size:18>**文字**</size> ![logo:bupt@28] 大校徽'
+        for revision, font_size in enumerate([8, 18]):
+            status, _, _ = self.request('POST', '/api/save', {'source': source, 'revision': revision, 'font_size': font_size})
+            self.assertEqual(status, 200)
+            resumed = preview.EditorState(self.workspace)
+            self.assertEqual(resumed.font_size, font_size)
+            self.assertEqual(resumed.draft.read_text(encoding='utf-8'), source)
+            self.assertEqual(set(json.loads(resumed.settings_file.read_text())), {'pages', 'font_size', 'template_id'})
 
     def test_build_forwards_font_size_to_compiler(self):
         def fake_compile(command):
