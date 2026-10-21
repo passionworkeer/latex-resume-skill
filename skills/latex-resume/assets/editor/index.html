@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>简历编辑室</title><link rel="stylesheet" href="/editor/styles.css"></head>
+<body>
+<header class="topbar"><div class="brand"><span class="brandmark" aria-hidden="true">简</span><div><h1>简历编辑室</h1><p>专注文字，排版交给 LaTeX</p></div></div><span class="local-badge">本机工作区</span></header>
+<main>
+<section class="editor panel" aria-labelledby="editor-title">
+<div class="panel-heading"><div><span class="eyebrow">01 · 内容</span><h2 id="editor-title">编辑你的简历</h2></div><span id="source-name" class="filename">Markdown</span></div>
+<div class="toolbar"><button id="open-button" class="quiet" disabled>打开 Markdown</button><input type="file" id="file-input" accept=".md,.markdown,text/markdown,text/plain" hidden><button id="download-source" class="quiet" disabled>下载 Markdown</button><button id="logo-toggle" class="quiet" aria-expanded="false" aria-controls="logo-picker">插入图标</button></div>
+<div id="logo-picker" class="logo-picker" hidden><label for="logo-search">查找图标</label><input id="logo-search" type="search" placeholder="搜索名称，如 GitHub"><div id="logo-list" class="logo-list"></div><p class="hint">图标与文字放在同一行；标题或要点中会插在文字前，仅作排版装饰。</p></div>
+<label class="sr-only" for="source">简历 Markdown 内容</label><textarea id="source" spellcheck="false" placeholder="正在读取本机草稿…" disabled></textarea>
+<details class="format-help"><summary>简单格式说明</summary><p><code># 姓名</code> 为标题；<code>## 工作经历</code> 为栏目；<code>### 公司或项目 | 职位或角色 | 日期</code> 为条目（三部分以 <code>|</code> 分隔）；<code>- 内容</code> 为要点；<code>**重点**</code> 表示加粗。保留现有结构，直接修改文字即可。</p></details>
+<div class="build-controls"><label class="pages-label" for="pages">预期页数 <input id="pages" type="number" min="1" max="20" value="1"></label><label class="auto-label"><input id="auto-render" type="checkbox"> 自动生成</label><button id="build-button" class="primary" disabled>保存并生成 PDF <kbd>⌘ / Ctrl ↵</kbd></button></div>
+<p id="save-state" class="save-state" role="status">正在连接本机编辑服务…</p>
+</section>
+<section class="preview panel" aria-labelledby="preview-title"><div class="panel-heading"><div><span class="eyebrow">02 · 排版</span><h2 id="preview-title">PDF 预览</h2></div><a id="download-pdf" class="pdf-link disabled" aria-disabled="true">下载 PDF</a></div><div class="preview-status"><span id="status-dot" class="status-dot"></span><span id="preview-state" role="status">尚未生成</span><span id="page-count"></span></div><div id="error-box" role="alert" hidden><strong id="error-title">生成未完成</strong><p id="error-message"></p><details><summary>查看详细信息</summary><pre id="error-log"></pre></details></div><div id="preview-pages" class="preview-pages"><div class="empty-preview"><div class="paper-icon" aria-hidden="true">Aa<span>────<br>────<br>───</span></div><h3>让文字变成一份简历</h3><p>在左侧修改内容，然后点击「保存并生成 PDF」。<br>这里会显示实际 PDF 的页面效果。</p></div></div></section>
+</main><footer>草稿在点击生成时保存到本机会话目录 · 请下载 Markdown 以保留可编辑副本</footer>
+<script src="/editor/app.js" defer></script></body></html>

@@ -1,0 +1,64 @@
+"""Pinned local SVG catalogue and safe vector conversion for LaTeX."""
+import hashlib
+import json
+from pathlib import Path
+import re
+import xml.etree.ElementTree as ET
+
+DIRECTORY = Path(__file__).resolve().parents[1] / 'assets/logos'
+TOKEN = re.compile(r'!\[logo:([a-z0-9][a-z0-9-]{0,63})\]')
+
+
+def catalogue():
+    data = json.loads((DIRECTORY / 'manifest.json').read_text(encoding='utf-8'))
+    items = data['icons']
+    result = {}
+    for item in items:
+        slug, filename = item['id'], item['file']
+        if not re.fullmatch(r'[a-z0-9][a-z0-9-]{0,63}', slug) or filename != slug + '.svg' or slug in result:
+            raise ValueError('Invalid logo catalogue entry')
+        result[slug] = item
+    return result
+
+
+def validate_svg(data):
+    if len(data) > 500_000 or b'<!DOCTYPE' in data.upper() or b'<!ENTITY' in data.upper():
+        raise ValueError('SVG is too large or contains a DTD/entity')
+    root = ET.fromstring(data)
+    allowed = {'svg', 'title', 'desc', 'path', 'g', 'circle', 'rect', 'ellipse', 'line', 'polyline', 'polygon'}
+    if root.tag.rsplit('}', 1)[-1] != 'svg':
+        raise ValueError('Expected an SVG root')
+    for element in root.iter():
+        if element.tag.rsplit('}', 1)[-1] not in allowed:
+            raise ValueError('Unsupported SVG element')
+        for key, value in element.attrib.items():
+            key = key.rsplit('}', 1)[-1].lower()
+            if key.startswith('on') or key in {'href', 'src', 'style'} or re.search(r'url\s*\(|javascript:|https?:|file:|data:|@import', value, re.I):
+                raise ValueError('SVG active content or external references are not allowed')
+    return root
+
+
+def prepare(slugs, output):
+    if not slugs:
+        return
+    import fitz
+    entries = catalogue()
+    target = Path(output) / 'logos'
+    target.mkdir(parents=True, exist_ok=True)
+    used = []
+    for slug in sorted(set(slugs)):
+        if slug not in entries:
+            raise ValueError(f'Unknown logo: {slug}; see references/logos.md')
+        item = entries[slug]
+        data = (DIRECTORY / item['file']).read_bytes()
+        if hashlib.sha256(data).hexdigest() != item['sha256']:
+            raise ValueError(f'Logo checksum mismatch: {slug}')
+        validate_svg(data)
+        with fitz.open(stream=data, filetype='svg') as document:
+            (target / (slug + '.pdf')).write_bytes(document.convert_to_pdf())
+        # Keep the editable vector and provenance with every delivered resume.
+        (target / item['file']).write_bytes(data)
+        used.append(item)
+    for name in ['LICENSE.simple-icons.md', 'DISCLAIMER.simple-icons.md']:
+        (target / name).write_bytes((DIRECTORY / name).read_bytes())
+    (target / 'SOURCES.json').write_text(json.dumps(used, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')

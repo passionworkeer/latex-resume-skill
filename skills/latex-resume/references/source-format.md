@@ -23,11 +23,16 @@
 - `- 要点`；一行一个普通段落；空行用于源码可读性。
 - 支持 `**加粗**` 和 `[文字](https://example.com)`，不支持嵌套加粗/链接。链接只允许 HTTP(S)，邮箱可先写纯文本。
 - 只把链接的可见标签计入正文对照；PDF 链接目标需另行检查。
-- 不支持图片、HTML、表格、代码、嵌套列表或原始 TeX。脚本遇到不支持的语法会报行号，不静默丢弃。
+- 支持本地图标的特殊内联语法 `![logo:github]`，例如 `### ![logo:github] 示例开源项目 | 贡献者 | 2025.01 - 2025.03`。它是装饰图标，必须保留同一行的可见文字，不能用图标组成空文本行；图标不计入正文对照。ID 仅可来自本地清单，未知 ID 会报错。名称、来源和许可边界见 [logos.md](logos.md)。
+- 不支持一般 Markdown 图片（如 `![描述](URL)`）、HTML、表格、代码、嵌套列表或原始 TeX。脚本遇到不支持的语法会报行号，不静默丢弃。
 - 所有文本字符做 TeX 转义，输入中的反斜杠不会变成可执行命令。
 - 默认模板使用同一字体和字号支持中英文；英文示例是独立虚构内容，不会自动翻译中文。
 
 内容源是 Markdown；样式源是 `assets/templates/resume.tex`。生成的 `output/.../resume.tex` 供查看、交付或作为新的自定义模板起点，常规改稿仍应回到 Markdown 和样式源。
+
+## 本地手动编辑
+
+运行 `scripts/preview.py --workspace private/editor`，可在系统默认外部浏览器编辑此格式、搜索插入图标并生成实际 PDF/逐页 PNG。使用 [editor.md](editor.md) 中的命令和保存规则。
 
 ## 构建
 
@@ -44,7 +49,7 @@
 - `--pages N`：期望页数，默认 1；页数不符会失败，不会自动删除内容。
 - `--bundle URL_OR_PATH`：Tectonic 资源 bundle，默认 `https://data1b.fullyjustified.net/tlextras-2022.0r0.tar`，沿用已验证流程。可指定可信本地文件；XeLaTeX 忽略此项。
 
-输出包括 `resume.pdf`、`resume.tex`、`fonts/` 和许可、`expected-text.txt`、`resume.log`、`build.log`、`verification.json`、提取文本与 `preview-*.png`。生成目录应独立，不得与原稿所在目录相同或放进已安装 skill 中。机器检查失败返回非零状态；报告中的 `visual_status` 始终待人工/agent 看图确认，不伪造视觉 PASS。
+输出包括 `resume.pdf`、`resume.tex`、`fonts/` 和许可、`expected-text.txt`、`resume.log`、`build.log`、`verification.json`、提取文本与 `preview-*.png`；使用图标时另有 `logos/`，包含用到的 SVG、转换后的矢量 PDF、来源清单及上游许可/免责声明。生成目录应独立，不得与原稿所在目录相同或放进已安装 skill 中。机器检查失败返回非零状态；报告中的 `visual_status` 始终待人工/agent 看图确认，不伪造视觉 PASS。
 
 ## 独立、自定义模板验证
 

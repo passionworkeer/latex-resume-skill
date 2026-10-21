@@ -1,0 +1,418 @@
+{
+  "schema_version": 1,
+  "upstream": {
+    "name": "Simple Icons",
+    "repository": "https://github.com/simple-icons/simple-icons",
+    "commit": "c71c69e3a27e4436936b831c72643e6513b9f49b",
+    "package_version": "16.35.0",
+    "retrieved_on": "2026-10-21",
+    "license_file": "LICENSE.simple-icons.md",
+    "disclaimer_file": "DISCLAIMER.simple-icons.md",
+    "metadata_url": "https://github.com/simple-icons/simple-icons/blob/c71c69e3a27e4436936b831c72643e6513b9f49b/data/simple-icons.json"
+  },
+  "license_scope": "CC0 describes the upstream collection. The upstream disclaimer does not guarantee CC0 for every underlying brand mark; individual_license null means undeclared, not permission granted. Trademark rights are separate.",
+  "icons": [
+    {
+      "id": "alibabacloud",
+      "name": "Alibaba Cloud",
+      "file": "alibabacloud.svg",
+      "source": "https://github.com/simple-icons/simple-icons/blob/c71c69e3a27e4436936b831c72643e6513b9f49b/icons/alibabacloud.svg",
+      "sha256": "c8b18c07ebc462395f26cea2795ef622ec4c59c5cd5a9b6a3fd9938e0e7650e4",
+      "license": "CC0-1.0 (upstream collection; see DISCLAIMER.simple-icons.md)",
+      "individual_license": null,
+      "brand_url": "https://www.alibabagroup.com/en/ir/reports",
+      "guidelines_url": null,
+      "color": "#FF6A00",
+      "aliases": [
+        "阿里云"
+      ]
+    },
+    {
+      "id": "alibabadotcom",
+      "name": "Alibaba.com",
+      "file": "alibabadotcom.svg",
+      "source": "https://github.com/simple-icons/simple-icons/blob/c71c69e3a27e4436936b831c72643e6513b9f49b/icons/alibabadotcom.svg",
+      "sha256": "332af9fa32a35a299cdce47d18f4384495314ac03c4caaae435a4ab270a15b14",
+      "license": "CC0-1.0 (upstream collection; see DISCLAIMER.simple-icons.md)",
+      "individual_license": null,
+      "brand_url": "https://www.alibabagroup.com/en/ir/reports",
+      "guidelines_url": null,
+      "color": "#FF6A00",
+      "aliases": [
+        "阿里巴巴国际站"
+      ]
+    },
+    {
+      "id": "anthropic",
+      "name": "Anthropic",
+      "file": "anthropic.svg",
+      "source": "https://github.com/simple-icons/simple-icons/blob/c71c69e3a27e4436936b831c72643e6513b9f49b/icons/anthropic.svg",
+      "sha256": "1cc599f6ebce2016dc388cf84e54a52c6b13487655c7e243554d654c7bce1882",
+      "license": "CC0-1.0 (upstream collection; see DISCLAIMER.simple-icons.md)",
+      "individual_license": null,
+      "brand_url": "https://www.anthropic.com",
+      "guidelines_url": null,
+      "color": "#191919",
+      "aliases": []
+    },
+    {
+      "id": "apple",
+      "name": "Apple",
+      "file": "apple.svg",
+      "source": "https://github.com/simple-icons/simple-icons/blob/c71c69e3a27e4436936b831c72643e6513b9f49b/icons/apple.svg",
+      "sha256": "2a1509dccd25e6d2bc7a11a8e52941077e1a48555e192ce638699b9f083c2a7c",
+      "license": "CC0-1.0 (upstream collection; see DISCLAIMER.simple-icons.md)",
+      "individual_license": null,
+      "brand_url": "https://www.apple.com",
+      "guidelines_url": null,
+      "color": "#000000",
+      "aliases": [
+        "苹果"
+      ]
+    },
+    {
+      "id": "baidu",
+      "name": "Baidu",
+      "file": "baidu.svg",
+      "source": "https://github.com/simple-icons/simple-icons/blob/c71c69e3a27e4436936b831c72643e6513b9f49b/icons/baidu.svg",
+      "sha256": "e2eeaca4c5273ecff775ee4b357091678a7587b2d606190f8e5b7dce4d93a781",
+      "license": "CC0-1.0 (upstream collection; see DISCLAIMER.simple-icons.md)",
+      "individual_license": null,
+      "brand_url": "https://www.baidu.com",
+      "guidelines_url": null,
+      "color": "#2932E1",
+      "aliases": [
+        "百度"
+      ]
+    },
+    {
+      "id": "bilibili",
+      "name": "Bilibili",
+      "file": "bilibili.svg",
+      "source": "https://github.com/simple-icons/simple-icons/blob/c71c69e3a27e4436936b831c72643e6513b9f49b/icons/bilibili.svg",
+      "sha256": "0b31005ccf765a9d37be2c42f1d36e44572ccadb088250626d9905ae5d4f3d21",
+      "license": "CC0-1.0 (upstream collection; see DISCLAIMER.simple-icons.md)",
+      "individual_license": null,
+      "brand_url": "https://www.bilibili.com",
+      "guidelines_url": null,
+      "color": "#00A1D6",
+      "aliases": [
+        "哔哩哔哩",
+        "B站"
+      ]
+    },
+    {
+      "id": "bytedance",
+      "name": "ByteDance",
+      "file": "bytedance.svg",
+      "source": "https://github.com/simple-icons/simple-icons/blob/c71c69e3a27e4436936b831c72643e6513b9f49b/icons/bytedance.svg",
+      "sha256": "03a322949b34209cb0446382bbaf1c458eeffd75a6930f6bf37ca910578a6429",
+      "license": "CC0-1.0 (upstream collection; see DISCLAIMER.simple-icons.md)",
+      "individual_license": null,
+      "brand_url": "https://www.bytedance.com",
+      "guidelines_url": null,
+      "color": "#3C8CFF",
+      "aliases": [
+        "字节跳动"
+      ]
+    },
+    {
+      "id": "cloudflare",
+      "name": "Cloudflare",
+      "file": "cloudflare.svg",
+      "source": "https://github.com/simple-icons/simple-icons/blob/c71c69e3a27e4436936b831c72643e6513b9f49b/icons/cloudflare.svg",
+      "sha256": "408096d99907fd99e0863cb5d73f77a72537c6a85fd8d5e2704178a83a891f08",
+      "license": "CC0-1.0 (upstream collection; see DISCLAIMER.simple-icons.md)",
+      "individual_license": null,
+      "brand_url": "https://www.cloudflare.com/logo/",
+      "guidelines_url": "https://www.cloudflare.com/trademark/",
+      "color": "#F38020",
+      "aliases": []
+    },
+    {
+      "id": "docker",
+      "name": "Docker",
+      "file": "docker.svg",
+      "source": "https://github.com/simple-icons/simple-icons/blob/c71c69e3a27e4436936b831c72643e6513b9f49b/icons/docker.svg",
+      "sha256": "65571291c261ef869c31540a38f3ca0f0ee3bb73f179c172211c8860f19a6359",
+      "license": "CC0-1.0 (upstream collection; see DISCLAIMER.simple-icons.md)",
+      "individual_license": null,
+      "brand_url": "https://www.docker.com/company/newsroom/media-resources",
+      "guidelines_url": null,
+      "color": "#2496ED",
+      "aliases": []
+    },
+    {
+      "id": "github",
+      "name": "GitHub",
+      "file": "github.svg",
+      "source": "https://github.com/simple-icons/simple-icons/blob/c71c69e3a27e4436936b831c72643e6513b9f49b/icons/github.svg",
+      "sha256": "3bf8cceead820aec50d4ee825a3fd02c5a1cd6665cc9cf4cbf3d9c8861a204bb",
+      "license": "CC0-1.0 (upstream collection; see DISCLAIMER.simple-icons.md)",
+      "individual_license": null,
+      "brand_url": "https://github.com/logos",
+      "guidelines_url": "https://github.com/logos",
+      "color": "#181717",
+      "aliases": []
+    },
+    {
+      "id": "gitlab",
+      "name": "GitLab",
+      "file": "gitlab.svg",
+      "source": "https://github.com/simple-icons/simple-icons/blob/c71c69e3a27e4436936b831c72643e6513b9f49b/icons/gitlab.svg",
+      "sha256": "c7c39058bd1b6f9f40334383bd5136bb8c5ba5e6a24200f2d1f18365e2526e28",
+      "license": "CC0-1.0 (upstream collection; see DISCLAIMER.simple-icons.md)",
+      "individual_license": null,
+      "brand_url": "https://about.gitlab.com/press/press-kit/",
+      "guidelines_url": "https://about.gitlab.com/handbook/marketing/corporate-marketing/brand-activation/trademark-guidelines/",
+      "color": "#FC6D26",
+      "aliases": []
+    },
+    {
+      "id": "google",
+      "name": "Google",
+      "file": "google.svg",
+      "source": "https://github.com/simple-icons/simple-icons/blob/c71c69e3a27e4436936b831c72643e6513b9f49b/icons/google.svg",
+      "sha256": "d8cf9fb2d5e234e03254f1d6400d8cc8160c309b010d031a64f37084b5a21d01",
+      "license": "CC0-1.0 (upstream collection; see DISCLAIMER.simple-icons.md)",
+      "individual_license": null,
+      "brand_url": "https://partnermarketinghub.withgoogle.com",
+      "guidelines_url": "https://about.google/brand-resource-center/brand-elements/",
+      "color": "#4285F4",
+      "aliases": [
+        "谷歌"
+      ]
+    },
+    {
+      "id": "huawei",
+      "name": "Huawei",
+      "file": "huawei.svg",
+      "source": "https://github.com/simple-icons/simple-icons/blob/c71c69e3a27e4436936b831c72643e6513b9f49b/icons/huawei.svg",
+      "sha256": "eb43e0a9450cef22ce70d624a60622a0aa542142102e402a293578b388b876f5",
+      "license": "CC0-1.0 (upstream collection; see DISCLAIMER.simple-icons.md)",
+      "individual_license": null,
+      "brand_url": "https://e.huawei.com/ph/material/partner/0a72728b864949c48b22106454352483",
+      "guidelines_url": "https://e.huawei.com/ph/material/partner/0a72728b864949c48b22106454352483",
+      "color": "#FF0000",
+      "aliases": [
+        "华为"
+      ]
+    },
+    {
+      "id": "intel",
+      "name": "Intel",
+      "file": "intel.svg",
+      "source": "https://github.com/simple-icons/simple-icons/blob/c71c69e3a27e4436936b831c72643e6513b9f49b/icons/intel.svg",
+      "sha256": "25d0d4387af0999eb5dc79b165ecfd7b972ff43047406da533f3207ac92c0a57",
+      "license": "CC0-1.0 (upstream collection; see DISCLAIMER.simple-icons.md)",
+      "individual_license": null,
+      "brand_url": "https://www.intel.com/content/www/us/en/newsroom/resources/press-kits-intel-overview.html",
+      "guidelines_url": null,
+      "color": "#0071C5",
+      "aliases": []
+    },
+    {
+      "id": "kuaishou",
+      "name": "Kuaishou",
+      "file": "kuaishou.svg",
+      "source": "https://github.com/simple-icons/simple-icons/blob/c71c69e3a27e4436936b831c72643e6513b9f49b/icons/kuaishou.svg",
+      "sha256": "6fd3afc958574cf6aafafa5a4085d7903dec61d20e0ee737f632b0c815da764e",
+      "license": "CC0-1.0 (upstream collection; see DISCLAIMER.simple-icons.md)",
+      "individual_license": null,
+      "brand_url": "https://www.kuaishou.com/official/material-lib",
+      "guidelines_url": "https://www.kuaishou.com/official/material-lib",
+      "color": "#FF4906",
+      "aliases": [
+        "快手"
+      ]
+    },
+    {
+      "id": "lenovo",
+      "name": "Lenovo",
+      "file": "lenovo.svg",
+      "source": "https://github.com/simple-icons/simple-icons/blob/c71c69e3a27e4436936b831c72643e6513b9f49b/icons/lenovo.svg",
+      "sha256": "6d2d3756e0b0dd70a7f8d678794b43c89eb08871a45bcd79ede8ecc64a6141ca",
+      "license": "CC0-1.0 (upstream collection; see DISCLAIMER.simple-icons.md)",
+      "individual_license": null,
+      "brand_url": "https://news.lenovo.com/press-kits/",
+      "guidelines_url": null,
+      "color": "#E2231A",
+      "aliases": [
+        "联想"
+      ]
+    },
+    {
+      "id": "meituan",
+      "name": "Meituan",
+      "file": "meituan.svg",
+      "source": "https://github.com/simple-icons/simple-icons/blob/c71c69e3a27e4436936b831c72643e6513b9f49b/icons/meituan.svg",
+      "sha256": "851a1b8c8c050a609766cc7b64d3fd233b5838cecf638cecf30113f9e846817a",
+      "license": "CC0-1.0 (upstream collection; see DISCLAIMER.simple-icons.md)",
+      "individual_license": null,
+      "brand_url": "https://www.meituan.com/media",
+      "guidelines_url": null,
+      "color": "#FFD100",
+      "aliases": [
+        "美团"
+      ]
+    },
+    {
+      "id": "meta",
+      "name": "Meta",
+      "file": "meta.svg",
+      "source": "https://github.com/simple-icons/simple-icons/blob/c71c69e3a27e4436936b831c72643e6513b9f49b/icons/meta.svg",
+      "sha256": "e3e9db62f59dc477e5917687349b8aa9685b841d40300c1afad60ad85075cd2e",
+      "license": "CC0-1.0 (upstream collection; see DISCLAIMER.simple-icons.md)",
+      "individual_license": null,
+      "brand_url": "https://www.meta.com",
+      "guidelines_url": "https://www.facebook.com/brand/resources/meta/company-brand",
+      "color": "#0467DF",
+      "aliases": []
+    },
+    {
+      "id": "neteasecloudmusic",
+      "name": "NetEase Cloud Music",
+      "file": "neteasecloudmusic.svg",
+      "source": "https://github.com/simple-icons/simple-icons/blob/c71c69e3a27e4436936b831c72643e6513b9f49b/icons/neteasecloudmusic.svg",
+      "sha256": "196b802a78e9e4645578ffd797577b853f3a700da0481f49d15f0d6b20ae60ed",
+      "license": "CC0-1.0 (upstream collection; see DISCLAIMER.simple-icons.md)",
+      "individual_license": null,
+      "brand_url": "https://y.music.163.com/m",
+      "guidelines_url": null,
+      "color": "#D43C33",
+      "aliases": [
+        "网易云音乐"
+      ]
+    },
+    {
+      "id": "nvidia",
+      "name": "NVIDIA",
+      "file": "nvidia.svg",
+      "source": "https://github.com/simple-icons/simple-icons/blob/c71c69e3a27e4436936b831c72643e6513b9f49b/icons/nvidia.svg",
+      "sha256": "b0e4cfc12712c840d4d630c9a717200fbd09aeeadbd3faeac13bda2e2ed050b0",
+      "license": "CC0-1.0 (upstream collection; see DISCLAIMER.simple-icons.md)",
+      "individual_license": null,
+      "brand_url": "https://www.nvidia.com/en-us",
+      "guidelines_url": null,
+      "color": "#76B900",
+      "aliases": [
+        "英伟达"
+      ]
+    },
+    {
+      "id": "qq",
+      "name": "QQ",
+      "file": "qq.svg",
+      "source": "https://github.com/simple-icons/simple-icons/blob/c71c69e3a27e4436936b831c72643e6513b9f49b/icons/qq.svg",
+      "sha256": "3c94e923013fe13a5194c84d9a44e2d62225a7ea3537f3ad95a3cb72fdae1383",
+      "license": "CC0-1.0 (upstream collection; see DISCLAIMER.simple-icons.md)",
+      "individual_license": null,
+      "brand_url": "https://en.wikipedia.org/wiki/File:Tencent_QQ.svg",
+      "guidelines_url": "https://qq.design/brand/BrandDesign/Logo",
+      "color": "#1EBAFC",
+      "aliases": [
+        "腾讯",
+        "QQ"
+      ]
+    },
+    {
+      "id": "redhat",
+      "name": "Red Hat",
+      "file": "redhat.svg",
+      "source": "https://github.com/simple-icons/simple-icons/blob/c71c69e3a27e4436936b831c72643e6513b9f49b/icons/redhat.svg",
+      "sha256": "3d0e1854a9dad1a8ad11132843f522f948197ec0e0ee49b7a51d5fdf44230568",
+      "license": "CC0-1.0 (upstream collection; see DISCLAIMER.simple-icons.md)",
+      "individual_license": null,
+      "brand_url": "https://www.redhat.com/en/about/brand/new-brand/details",
+      "guidelines_url": null,
+      "color": "#EE0000",
+      "aliases": []
+    },
+    {
+      "id": "samsung",
+      "name": "Samsung",
+      "file": "samsung.svg",
+      "source": "https://github.com/simple-icons/simple-icons/blob/c71c69e3a27e4436936b831c72643e6513b9f49b/icons/samsung.svg",
+      "sha256": "4a241ca8ebab6e71883b172acb9fb454efa69f308e4f2c31ec80668aeb6627d9",
+      "license": "CC0-1.0 (upstream collection; see DISCLAIMER.simple-icons.md)",
+      "individual_license": null,
+      "brand_url": "https://www.samsung.com/us/about-us/brand-identity/logo/",
+      "guidelines_url": "https://www.samsung.com/us/about-us/brand-identity/logo/",
+      "color": "#1428A0",
+      "aliases": []
+    },
+    {
+      "id": "sap",
+      "name": "SAP",
+      "file": "sap.svg",
+      "source": "https://github.com/simple-icons/simple-icons/blob/c71c69e3a27e4436936b831c72643e6513b9f49b/icons/sap.svg",
+      "sha256": "79127bd0cdb41e5940ddbe895da58c4fe1fb6a912a7178f4bb4e108fb39c8758",
+      "license": "CC0-1.0 (upstream collection; see DISCLAIMER.simple-icons.md)",
+      "individual_license": null,
+      "brand_url": "https://www.sap.com",
+      "guidelines_url": null,
+      "color": "#0FAAFF",
+      "aliases": []
+    },
+    {
+      "id": "sony",
+      "name": "Sony",
+      "file": "sony.svg",
+      "source": "https://github.com/simple-icons/simple-icons/blob/c71c69e3a27e4436936b831c72643e6513b9f49b/icons/sony.svg",
+      "sha256": "d012ec936e65a255f7b7b49a7e99c5aa7ab919fbc1487d8e09af82031c0e7090",
+      "license": "CC0-1.0 (upstream collection; see DISCLAIMER.simple-icons.md)",
+      "individual_license": null,
+      "brand_url": "https://www.sony.com",
+      "guidelines_url": null,
+      "color": "#FFFFFF",
+      "aliases": []
+    },
+    {
+      "id": "tencenthy",
+      "name": "Tencent Hy",
+      "file": "tencenthy.svg",
+      "source": "https://github.com/simple-icons/simple-icons/blob/c71c69e3a27e4436936b831c72643e6513b9f49b/icons/tencenthy.svg",
+      "sha256": "86af5347948101dff2efd267fd1389c9b0455dab493d86bcb19e40dd8bfaa8ed",
+      "license": "CC0-1.0 (upstream collection; see DISCLAIMER.simple-icons.md)",
+      "individual_license": null,
+      "brand_url": "https://hy.tencent.ai",
+      "guidelines_url": null,
+      "color": "#0052D9",
+      "aliases": [
+        "腾讯",
+        "混元"
+      ]
+    },
+    {
+      "id": "wechat",
+      "name": "WeChat",
+      "file": "wechat.svg",
+      "source": "https://github.com/simple-icons/simple-icons/blob/c71c69e3a27e4436936b831c72643e6513b9f49b/icons/wechat.svg",
+      "sha256": "74b48b3d315337ce79cb644933b5f975e19996f564fcc4138ed67d45674c43ca",
+      "license": "CC0-1.0 (upstream collection; see DISCLAIMER.simple-icons.md)",
+      "individual_license": null,
+      "brand_url": "https://wechat.design/tool/brand",
+      "guidelines_url": "https://wechat.design/brand/main-brand",
+      "color": "#07C160",
+      "aliases": [
+        "腾讯",
+        "微信"
+      ]
+    },
+    {
+      "id": "xiaomi",
+      "name": "Xiaomi",
+      "file": "xiaomi.svg",
+      "source": "https://github.com/simple-icons/simple-icons/blob/c71c69e3a27e4436936b831c72643e6513b9f49b/icons/xiaomi.svg",
+      "sha256": "8866d12a70d85ab43acd3b9c80f1b37792d91160d8273efffdf817af5fd608cb",
+      "license": "CC0-1.0 (upstream collection; see DISCLAIMER.simple-icons.md)",
+      "individual_license": null,
+      "brand_url": "https://www.mi.com/global",
+      "guidelines_url": null,
+      "color": "#FF6900",
+      "aliases": [
+        "小米"
+      ]
+    }
+  ]
+}

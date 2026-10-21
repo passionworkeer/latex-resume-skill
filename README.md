@@ -4,7 +4,7 @@
 
 这是从实际简历制作流程中整理出的独立小项目：**先核实内容，再组织表达，最后用可编辑的 LaTeX 排版，逐页检查成品**。支持中文和英文，也支持用户提供 PDF / PNG / JPG 作为新模板的版式参考。
 
-仓库只包含虚构示例，**没有作者的真实简历、联系方式、项目经历或历史截图**。自带模板保留我们使用的 A4 单栏、灰色正文、深色重点、黑色分节线和蓝色链接；品牌图标已移除。
+仓库只包含虚构示例，**没有作者的真实简历、联系方式、项目经历或历史截图**。自带模板保留我们使用的 A4 单栏、灰色正文、深色重点、黑色分节线和蓝色链接，并提供本地手动编辑器与 28 个可搜索的装饰图标。图标的集合许可与品牌权利分别说明。
 
 ![虚构中文简历预览](examples/example-zh.png)
 
@@ -22,6 +22,8 @@
 缺少 Python、虚拟环境支持、编译器、字体或其他依赖时，请按文档自动检测并安装。优先使用项目内虚拟环境和本地工具；只有环境确实禁止或需要管理员权限时，说明具体阻塞。不要让我手工重复你能完成的安装步骤。
 
 默认先用仓库中的简约单栏模板。如果我发送新的 PDF、PNG 或 JPG 模板，请先观察版式并测量字号、边距、对齐和间距，再用真正可编辑的 LaTeX 重建，不要把整张图当作简历背景，也不要把模板示例人物的经历写进我的简历。
+
+如果我希望自己修改文字，请启动 scripts/preview.py 本地编辑器，用系统默认外部浏览器打开。说明如何编辑 Markdown、点击生成、查看真实 PDF 页面和下载结果。需要图标时，使用编辑器的搜索或本地图标目录查找；保留文字名称，核对品牌标识与使用条款，不下载不明来源素材。
 
 把我的资料、证据、改稿和输出放在 private/ 或 output/ 中。不要提交或发布我的真实简历。生成后检查正文是否丢失、页数、文字边界、编译日志，并渲染所有页面逐页检查。交付 PDF、预览、可编辑源码、验证报告和仍需我补充的问题，明确自动检查与视觉检查分别完成了什么。
 ```
@@ -47,6 +49,30 @@ Windows PowerShell 将 `python3` 换成 `py -3`，将 `.venv/bin/python` 换成 
 
 日常使用先把示例复制到 `private/resume.md` 再修改；不要往公开示例中写真实内容。Markdown 子集、编译选项和手工模板入口见 [源码格式](skills/latex-resume/references/source-format.md)。
 
+## 自己修改文字并预览
+
+完成上面的环境安装后，从仓库根目录运行：
+
+```bash
+.venv/bin/python skills/latex-resume/scripts/preview.py \
+  --workspace private/editor
+```
+
+命令会启动仅监听本机的服务，并自动使用**系统默认外部浏览器**打开编辑器。第一次使用载入虚构中文示例；修改 Markdown 后，点击「保存并生成 PDF」（或 ⌘ / Ctrl + Enter），右侧显示实际 LaTeX PDF 渲染的逐页 PNG，可下载同一份 PDF。自动生成默认关闭，可按需勾选。
+
+「插入图标」可按名称或 ID 搜索本地 28 个图标，例如 GitHub；点击后在光标所在位置插入 `![logo:github]`。图标仅作装饰，应与文字名称同用，不代表任职、技能或品牌授权。详见 [图标来源与使用边界](skills/latex-resume/references/logos.md)。
+
+导入已有 Markdown 时，使用新工作区：
+
+```bash
+.venv/bin/python skills/latex-resume/scripts/preview.py \
+  --source private/resume.md --workspace private/editor-import
+```
+
+`--source` 导入为工作区的 `resume.md`，不会直接覆盖原文件。已有不同草稿的工作区会拒绝冲突导入；省略 `--source` 可继续编辑该工作区草稿。「打开 Markdown」先载入编辑框，点击生成才保存到工作区。
+
+草稿在编译前保存；语法错误或编译失败后仍可继续修正。尚未点击生成的修改需下载 Markdown 保留，关闭页面时会提示。修改后旧预览与旧下载会标记过期，不能当作本轮成功结果。服务退出后重新运行同一工作区可读取已保存草稿；Ctrl+C 停止服务。完整参数、保存和故障处理见 [编辑器说明](skills/latex-resume/references/editor.md)。
+
 ## 安装为 skill（可选）
 
 最简单的方式是让 agent 直接读取仓库内的 `SKILL.md`。如果使用 Codex，也可以把整个 `skills/latex-resume/` 目录复制到 `~/.codex/skills/latex-resume/`，或在可用时使用 skill 安装器指定本仓库和该子路径。已存在同名 skill 时先检查差异，避免覆盖本地修改。
@@ -69,8 +95,10 @@ Windows PowerShell 将 `python3` 换成 `py -3`，将 `.venv/bin/python` 换成 
 ```text
 skills/latex-resume/
   SKILL.md                 agent 入口
-  scripts/                 环境准备、生成、验证
+  scripts/                 环境准备、生成、验证和本地编辑器
   assets/templates/        可编辑 LaTeX 和虚构中英文 Markdown
+  assets/editor/           本地 Markdown 编辑界面
+  assets/logos/            28 个 SVG、来源清单和许可说明
   references/              工作流程、访谈、模板复刻和环境说明
 examples/                  可公开分享的虚构 PDF / PNG
 licenses/                  第三方许可证
@@ -80,7 +108,7 @@ output/                    用户生成结果（Git 忽略）
 
 ## 许可与边界
 
-项目原创代码和文档采用 [MIT License](LICENSE)。模板沿用单栏 LaTeX 简历的设计思路，保留 [zheyuye/resume-chinese](https://github.com/zheyuye/resume-chinese) 的 [MIT 署名](licenses/resume-chinese-MIT.txt)。没有复制 CodeCV 网页代码、iconfont 或品牌素材。
+项目原创代码和文档采用 [MIT License](LICENSE)。模板沿用单栏 LaTeX 简历的设计思路，保留 [zheyuye/resume-chinese](https://github.com/zheyuye/resume-chinese) 的 [MIT 署名](licenses/resume-chinese-MIT.txt)。没有复制 CodeCV 网页代码、私有 iconfont、私有品牌素材或个人截图。另行收录的 28 个 SVG 来自固定提交的 [Simple Icons](https://github.com/simple-icons/simple-icons/tree/c71c69e3a27e4436936b831c72643e6513b9f49b)；集合采用 CC0-1.0，个别品牌标识的版权、商标和使用规则仍需分别核对，不能据此声称所有品牌均为 CC0 或已获品牌方授权。见 [图标说明](skills/latex-resume/references/logos.md)。
 
 [Noto Sans SC](https://github.com/google/fonts/tree/main/ofl/notosanssc) 使用 [SIL OFL 1.1](licenses/NotoSansSC-OFL.txt)，由安装脚本从固定提交下载并校验，不归入项目 MIT。Tectonic 从[官方发行版](https://github.com/tectonic-typesetting/tectonic/releases/tag/tectonic%400.17.0)下载；相关引擎、TeX 包和 Python 依赖保留各自许可，见 [第三方说明](THIRD_PARTY_NOTICES.md)。若替换为商业模板、字体或图片，请核对自己的使用和分享权限。
 
@@ -88,4 +116,4 @@ output/                    用户生成结果（Git 忽略）
 
 ## English
 
-An agent skill for evidence-based resume editing, project-background interviews, editable LaTeX typesetting, and PDF/image reference reconstruction. Includes fictional Chinese and English examples, a local dependency bootstrapper, content/layout checks, and a required visual review loop. Read [SKILL.md](skills/latex-resume/SKILL.md), run `scripts/setup.py` from your workspace, then build a fictional example before working on private content.
+An agent skill for evidence-based resume editing, project-background interviews, editable LaTeX typesetting, and PDF/image reference reconstruction. Includes fictional Chinese and English examples, a local Markdown editor with actual PDF/page previews, 28 searchable local SVG marks, a local dependency bootstrapper, content/layout checks, and a required visual review loop. Read [SKILL.md](skills/latex-resume/SKILL.md), run `scripts/setup.py` from your workspace, then build a fictional example before working on private content.

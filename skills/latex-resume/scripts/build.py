@@ -21,7 +21,14 @@ def inline(text):
     tex, plain = [], []
     i = 0
     while i < len(text):
-        if text.startswith('**', i):
+        if text.startswith('![logo:', i):
+            from logos import TOKEN, catalogue
+            match = TOKEN.match(text, i)
+            if not match or match[1] not in catalogue():
+                raise ValueError('Unknown or malformed logo; see references/logos.md')
+            tex.append(r'\resumeicon{' + match[1] + '}')
+            i = match.end()
+        elif text.startswith('**', i):
             end = text.find('**', i + 2)
             if end < 0 or end == i + 2:
                 raise ValueError('Unclosed or empty bold span')
@@ -164,6 +171,8 @@ def main():
             raise RuntimeError('Missing fonts; run setup first: ' + str(fonts / name))
     shutil.copytree(fonts, out / 'fonts', dirs_exist_ok=True)
     shutil.copyfile(ROOT / 'assets/templates/LICENSE.txt', out / 'TEMPLATE-LICENSE.txt')
+    from logos import TOKEN, prepare
+    prepare(TOKEN.findall(args.source.read_text(encoding='utf-8')), out)
     engine, executable = select_engine(args.engine)
     if not executable:
         raise RuntimeError('No requested TeX engine available; run setup first')

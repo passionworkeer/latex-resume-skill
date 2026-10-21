@@ -25,6 +25,7 @@ jobs:
           "$PY" -m unittest discover -s tests -v
           "$PY" skills/latex-resume/scripts/build.py --source skills/latex-resume/assets/templates/example-zh.md --output output/example-zh
           "$PY" skills/latex-resume/scripts/build.py --source skills/latex-resume/assets/templates/example-en.md --output output/example-en
+          "$PY" skills/latex-resume/scripts/build.py --source skills/latex-resume/assets/templates/example-logos.md --output output/example-logos
       - uses: actions/upload-artifact@v4
         if: always()
         with:
