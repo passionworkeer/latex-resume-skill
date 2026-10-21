@@ -241,7 +241,9 @@ class PreviewTests(unittest.TestCase):
         image.write_bytes(b'<svg/>')
         entries = {'school': {'id': 'school', 'file': 'school.svg', 'local': True}}
         with patch.object(preview.logo_assets, 'catalogue', return_value=entries), patch.object(preview.logo_assets, 'resolve_logo_path', return_value=image, create=True) as resolver:
-            self.assertEqual(json.loads(self.request()[2])['logos'], list(entries.values()))
+            self.assertEqual(json.loads(self.request()[2])['logos'], [dict(entries['school'], aspect_ratio=1)])
+            resolver.assert_called_once_with('school.svg')
+            resolver.reset_mock()
             self.assertEqual(self.request(path='/assets/logos/school.svg')[2], b'<svg/>')
             resolver.assert_called_once_with('school.svg')
             self.assertEqual(self.request(path='/assets/logos/local/school.svg')[0], 404)

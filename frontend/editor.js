@@ -1,5 +1,6 @@
 import { createResumeEditor } from './rich-editor.js';
 import '../skills/latex-resume/assets/editor/styles.css';
+import { applyTemplate, fitPapers } from './layout.js';
 import { currentArtifact, validSettings } from './state.js';
 const $ = id => document.getElementById(id);
 let editor, token='', value='', revision=0, saved=-1, rendered=-1, busy=false, last=null, timer, ticker, started=0, logos=[], templates=[], templateId='classic', sourceName='resume.md';
@@ -11,11 +12,11 @@ function status() {
  $('export-pdf').disabled=$('export-png').disabled=!current();$('build-button').disabled=!token||busy;
 }
 function changed() { revision++;$('error-box').hidden=true;status();clearTimeout(timer);timer=setTimeout(sync,650); }
-function applyPaperStyle() { $('editor-host').dataset.template=templateId;$('editor-host').style.setProperty('--body-size',$('font-size').value+'pt'); }
-function scale() {const host=$('preview-host');host.style.width=$('zoom').value==='100'?'794px':'100%';host.style.maxWidth=$('zoom').value==='100'?'none':'794px';host.parentElement.scrollLeft=0;}
+function applyPaperStyle() { $('editor-host').dataset.template=templateId;applyTemplate($('editor-host'),templates.find(t=>t.id===templateId)?.layout,Number($('font-size').value));scale(); }
+function scale() {fitPapers($('editor-host'),$('preview-host'),$('zoom').value);}
 function showPages(result) {
- const fragment=document.createDocumentFragment();result.previews.forEach((url,i)=>{const figure=document.createElement('figure'),img=document.createElement('img'),caption=document.createElement('figcaption');img.src=url;img.alt=`简历第 ${i+1} 页`;caption.textContent=`第 ${i+1} 页 / 共 ${result.previews.length} 页`;figure.append(img,caption);fragment.append(figure);});
- $('preview-host').replaceChildren(fragment);$('page-count').textContent=`${result.previews.length} 页`;scale();
+ const fragment=document.createDocumentFragment();result.previews.forEach((url,i)=>{const figure=document.createElement('figure'),img=document.createElement('img'),caption=document.createElement('figcaption');img.onload=()=>{if($('linked-scroll').checked)$('preview-host').parentElement.scrollTop=$('editor-host').scrollTop;};img.src=url;img.alt=`简历第 ${i+1} 页`;caption.textContent=`第 ${i+1} 页 / 共 ${result.previews.length} 页`;figure.append(img,caption);fragment.append(figure);});
+ $('preview-host').replaceChildren(fragment);$('page-count').textContent=`${result.previews.length} 页`;scale();if($('linked-scroll').checked)$('preview-host').parentElement.scrollTop=$('editor-host').scrollTop;
 }
 async function sync() {
  clearTimeout(timer);if(!token||busy)return;
@@ -38,6 +39,10 @@ function download(url,name){const a=document.createElement('a');a.href=url;a.dow
 $('download-source').onclick=()=>{const url=URL.createObjectURL(new Blob([value],{type:'text/markdown;charset=utf-8'}));download(url,sourceName.replace(/\.(md|markdown)$/i,'')+'.md');setTimeout(()=>URL.revokeObjectURL(url),1000);};
 $('export-pdf').onclick=()=>{if(current())download(last.pdf_url,'resume.pdf');};
 $('export-png').onclick=()=>{if(current())download(last.previews.length===1?last.previews[0]+'?download=1':`/builds/${last.build_id}/previews.zip`,last.previews.length===1?'resume.png':'resume-previews.zip');};
+let scrollOwner=null,scrollRelease;
+function linkScroll(from,to){if(!$('linked-scroll').checked||scrollOwner===to)return;scrollOwner=from;to.scrollTop=from.scrollTop;to.scrollLeft=from.scrollLeft;clearTimeout(scrollRelease);scrollRelease=setTimeout(()=>{scrollOwner=null;},100);}
+$('editor-host').addEventListener('scroll',()=>linkScroll($('editor-host'),$('preview-host').parentElement));
+$('preview-host').parentElement.addEventListener('scroll',()=>linkScroll($('preview-host').parentElement,$('editor-host')));
 $('build-button').onclick=sync;$('pages').oninput=changed;$('zoom').onchange=scale;
 $('font-size').onchange=()=>{applyPaperStyle();changed();};
 function renderTemplates(){const fragment=document.createDocumentFragment();templates.forEach(template=>{const card=document.createElement('button'),img=document.createElement('img'),name=document.createElement('strong'),description=document.createElement('span'),badge=document.createElement('span');card.className='template-card';card.type='button';card.setAttribute('aria-pressed',String(template.id===templateId));img.src='/assets/templates/thumbnails/'+encodeURIComponent(template.thumbnail);img.alt=template.name+'模板缩略图';name.textContent=template.name;description.textContent=template.description;badge.textContent=template.id===templateId?'正在使用':'使用模板';badge.className='template-badge';card.append(img,name,description,badge);card.onclick=()=>{if(template.id!==templateId){templateId=template.id;renderTemplates();applyPaperStyle();changed();}$('template-dialog').close();};fragment.append(card);});$('template-grid').replaceChildren(fragment);$('template-name').textContent=templates.find(t=>t.id===templateId)?.name||templateId;}
@@ -63,5 +68,7 @@ function selection(info){$('bold-button').setAttribute('aria-pressed',String(!!i
  $('pages').value=session.default_pages||1;$('font-size').value=session.font_size||10.5;
  editor=createResumeEditor({element:$('editor-host'),source:value,logos,onChange:next=>{if(next===value)return;value=next;changed();},onSelection:selection,onError:message=>error('内容暂时无法保存，请检查提示。',message)});
  for(const id of ['open-button','bold-button','undo-button','redo-button','template-button','logo-toggle','selection-size','add-block','font-size'])$(id).disabled=false;
- renderTemplates();renderLogos();applyPaperStyle();status();sync();
+ renderTemplates();renderLogos();applyPaperStyle();
+ const sizing=new ResizeObserver(scale);sizing.observe($('editor-host'));sizing.observe($('preview-host').parentElement);
+ document.fonts.ready.then(scale);status();sync();
  }catch(e){error('编辑器暂时无法载入。可先导出原稿保留内容，再按提示处理。',e.message);$('save-state').textContent='需要处理';}})();

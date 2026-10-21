@@ -4,7 +4,7 @@ import unittest
 
 SCRIPTS = Path(__file__).resolve().parents[1] / 'skills/latex-resume/scripts'
 sys.path.insert(0, str(SCRIPTS))
-from templates import catalogue, get_template
+from templates import catalogue, get_template, column_split
 from build import convert
 
 
@@ -36,3 +36,21 @@ class TemplateTests(unittest.TestCase):
         tex, _ = convert(source, template_id='two-column')
         self.assertEqual(tex.count(r'\begin{multicols}{2}'), 1)
         self.assertEqual(tex.count(r'\end{multicols}'), 1)
+
+    def test_browser_metrics_are_read_from_tex_and_independent(self):
+        classic, minimal, columns = catalogue()
+        self.assertEqual(classic['layout']['margins']['left'], 7)
+        self.assertEqual(minimal['layout']['name_size'], 22)
+        self.assertEqual(columns['layout']['columns'], 2)
+        classic['layout']['margins']['left'] = 999
+        self.assertEqual(get_template()['layout']['margins']['left'], 7)
+
+    def test_section_split_ignores_font_bold_and_logo_markup(self):
+        self.assertEqual(column_split([10, 80, 50, 20]), 2)
+        self.assertEqual(column_split([10, 10, 10]), 1)
+        self.assertIsNone(column_split([10]))
+        plain = '# Name\n## One\n' + 'a'*20 + '\n## Two\n' + 'b'*50 + '\n## Three\n' + 'c'*30
+        formatted = plain.replace('a'*20, '<size:24>**'+'a'*20+'**</size> ![logo:bupt@48]')
+        before = convert(plain, template_id='two-column')[0].split(r'\columnbreak')[1]
+        after = convert(formatted, template_id='two-column')[0].split(r'\columnbreak')[1]
+        self.assertEqual(before, after)

@@ -142,10 +142,11 @@ def validate_font_size(value):
 
 
 def convert(source, font_size=10.5, template_id='classic'):
-    from templates import get_template
+    from templates import get_template, column_split
     selected_template = get_template(template_id)
     font_size = validate_font_size(font_size)
     body, expected = [], []
+    section_starts, section_weights = [], []
     in_list = False
     seen_name = False
     seen_section = False
@@ -169,6 +170,8 @@ def convert(source, font_size=10.5, template_id='classic'):
                 raise ValueError('Start with # Name')
             elif line.startswith('## '):
                 value, visible = inline(line[3:])
+                section_starts.append(len(body))
+                section_weights.append(0)
                 body.append(r'\section{' + value + '}')
                 seen_section = True
             elif line.startswith('### '):
@@ -196,6 +199,8 @@ def convert(source, font_size=10.5, template_id='classic'):
             if not visible.strip():
                 raise ValueError('Empty content')
             expected.append(visible)
+            if section_weights:
+                section_weights[-1] += len(re.sub(r'\s', '', visible))
         except ValueError as exc:
             raise ValueError(f'Line {number}: {exc}') from exc
     if not seen_name:
@@ -206,13 +211,9 @@ def convert(source, font_size=10.5, template_id='classic'):
     if template_id == 'two-column':
         first_section = next((i for i, line in enumerate(body) if line.startswith(r'\section{')), len(body))
         if first_section < len(body):
-            # Prefer a section boundary over splitting a heading across balanced columns.
-            boundaries = [i for i in range(first_section + 1, len(body)) if body[i].startswith(r'\section{')]
-            if boundaries:
-                weights = [len(re.sub(r'\\[A-Za-z]+|[{}]', '', line)) for line in body]
-                total = sum(weights[first_section:])
-                split = min(boundaries, key=lambda i: abs(sum(weights[first_section:i]) - total / 2))
-                body.insert(split, r'\columnbreak')
+            split = column_split(section_weights)
+            if split is not None:
+                body.insert(section_starts[split], r'\columnbreak')
             body.insert(first_section, r'\begin{multicols}{2}')
             body.append(r'\end{multicols}')
     return template.replace('%%FONT_SIZE%%', f'{font_size:g}').replace('%%LINE_HEIGHT%%', f'{font_size * (13.8 / 10.5):.2f}'.rstrip('0').rstrip('.')).replace('%%BODY%%', '\n'.join(body)), '\n'.join(expected) + '\n'

@@ -106,7 +106,14 @@ class EditorState:
         self.builds.mkdir(exist_ok=True)
 
     def logos(self):
-        return list(logo_assets.catalogue().values())
+        import xml.etree.ElementTree as ET
+        items = [dict(item) for item in logo_assets.catalogue().values()]
+        for item in items:
+            path = logo_assets.resolve_logo_path(item['file'])
+            root = ET.fromstring(path.read_bytes())
+            box = [float(n) for n in root.attrib.get('viewBox', '0 0 1 1').replace(',', ' ').split()]
+            item['aspect_ratio'] = box[2] / box[3] if len(box) == 4 and box[3] > 0 else 1
+        return items
 
     def save(self, source, revision, pages=None, font_size=None, template_id=None):
         """Atomically save a draft; the caller holds the shared save/build lock."""
@@ -232,7 +239,7 @@ class EditorHandler(BaseHTTPRequestHandler):
             self.serve_file(SKILL / 'assets/templates/thumbnails' / path.rsplit('/', 1)[-1])
         elif path.startswith('/assets/logos/'):
             name = path.removeprefix('/assets/logos/')
-            allowed = {item['file'] for item in self.state.logos()}
+            allowed = {item['file'] for item in logo_assets.catalogue().values()}
             if name not in allowed or Path(name).name != name:
                 self.send_json(404, {'error': 'Unknown logo'})
                 return

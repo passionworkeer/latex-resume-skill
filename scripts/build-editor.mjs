@@ -3,7 +3,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 const fallbackSources=JSON.parse(await readFile('licenses/frontend/sources.json','utf8')).sources;
 const root='skills/latex-resume/assets/editor';
-const result=await build({entryPoints:['frontend/editor.js'],bundle:true,minify:true,outfile:`${root}/bundle.js`,format:'iife',target:['es2020'],legalComments:'eof',metafile:true});
+const result=await build({entryPoints:['frontend/editor.js'],bundle:true,minify:true,outfile:`${root}/bundle.js`,format:'iife',external:['/assets/fonts/*'],target:['es2020'],legalComments:'eof',metafile:true});
 // Include the complete copyright/license notices of bundled dependencies.
 const packages=new Set(Object.keys(result.metafile.inputs).filter(p=>p.includes('node_modules/')).map(p=>{const bits=p.split('node_modules/').pop().split('/');return bits[0].startsWith('@')?bits.slice(0,2).join('/'):bits[0]}));
 let notices='# Bundled frontend third-party notices\n\nGenerated from the locked npm dependencies actually included in bundle.js / bundle.css. Original application code is MIT.\n';
