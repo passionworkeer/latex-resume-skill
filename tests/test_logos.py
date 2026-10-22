@@ -115,6 +115,40 @@ class LogoTests(unittest.TestCase):
             with self.subTest(content=content), self.assertRaises(ValueError):
                 logos.validate_svg(content.encode())
 
+    def test_custom_logo_auto_discovery_and_build(self):
+        svg_content = b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M0 0h24v24H0z"/></svg>'
+        with tempfile.TemporaryDirectory() as folder, patch.object(logos, 'DIRECTORY', Path(folder)):
+            root = Path(folder)
+            (root / 'manifest.json').write_text(json.dumps({'icons': []}))
+            (root / 'custom').mkdir()
+            (root / 'custom/my-company.svg').write_bytes(svg_content)
+            cat = logos.catalogue()
+            self.assertIn('my-company', cat)
+            self.assertEqual(cat['my-company']['storage'], 'custom')
+            self.assertTrue(cat['my-company']['custom'])
+            resolved = logos.resolve_logo_path('my-company.svg')
+            self.assertEqual(resolved, root / 'custom/my-company.svg')
+
+    def test_add_custom_logo_cli_and_adversarial_rejection(self):
+        import subprocess
+        safe_svg = b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>'
+        evil_svg = b'<svg><script>alert("evil")</script></svg>'
+        script_path = SCRIPTS / 'add_custom_logo.py'
+        with tempfile.TemporaryDirectory() as folder:
+            temp_root = Path(folder)
+            safe_file = temp_root / 'good.svg'
+            safe_file.write_bytes(safe_svg)
+            evil_file = temp_root / 'evil.svg'
+            evil_file.write_bytes(evil_svg)
+            res_safe = subprocess.run([sys.executable, str(script_path), '--file', str(safe_file), '--id', 'mytestcorp'], capture_output=True, text=True)
+            self.assertEqual(res_safe.returncode, 0)
+            custom_installed = SCRIPTS.parent / 'assets/logos/custom/mytestcorp.svg'
+            self.assertTrue(custom_installed.is_file())
+            custom_installed.unlink(missing_ok=True)
+            res_evil = subprocess.run([sys.executable, str(script_path), '--file', str(evil_file), '--id', 'evilcorp'], capture_output=True, text=True)
+            self.assertNotEqual(res_evil.returncode, 0)
+            self.assertIn('Error:', res_evil.stderr)
+
     def test_all_logos_convert_to_pdf_with_provenance(self):
         import fitz
         with tempfile.TemporaryDirectory() as folder:

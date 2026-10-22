@@ -8,7 +8,7 @@
 
 ![虚构中文简历预览](examples/example-zh.png)
 
-[中文示例 PDF](examples/example-zh.pdf) · [英文示例 PDF](examples/example-en.pdf) · [Skill 入口](skills/latex-resume/SKILL.md) · [完整流程](skills/latex-resume/references/workflow.md)
+[中文示例 PDF](examples/example-zh.pdf) · [英文示例 PDF](examples/example-en.pdf) · [Skill 入口](skills/latex-resume/SKILL.md) · [岗位针对性对齐与 ATS 规范](skills/latex-resume/references/job-tailoring.md) · [完整流程](skills/latex-resume/references/workflow.md)
 
 ## 直接复制给 agent
 
@@ -60,15 +60,15 @@ Windows PowerShell 将 `python3` 换成 `py -3`，将 `.venv/bin/python` 换成 
 
 命令会启动仅监听本机的服务，并自动使用**系统默认外部浏览器**打开编辑器。编辑器复用 MIT 许可的 Tiptap 3.32.0；前端已预打包，终端使用者无需安装 Node。先运行 `setup.py` 自动安装 Python 依赖、字体与所需编译器。第一次使用载入虚构中文示例；修改内容后默认停顿 **650ms** 自动保存并调用 LaTeX。编译通常需要数秒，首次下载资源可能更慢；右侧显示实际 PDF 渲染的逐页 PNG，不是浏览器 HTML 排版。
 
-左侧是可直接编辑的简历页面，无需输入 Markdown 语法。选中文字后点击 **B** 或选择字号；全文字号为 **8–18 pt**，选区字号为 **8–32 pt**，均支持 0.5 pt 步进。点击图标后可改 **8–48 pt** 的大小。新增章节、经历条目或要点，使用「＋ 添加内容」；粘贴保留文字，格式用工具栏调整。
+左侧是可直接编辑的简历页面，无需输入 Markdown 语法。选中文字后点击 **B** 加粗或点击 **🔗** 插入/编辑超链接；全文字号为 **8–18 pt**，选区字号为 **8–32 pt**，均支持 0.5 pt 步进。点击图标后可改 **8–48 pt** 的大小。新增章节、经历条目或要点，使用「＋ 添加内容」；粘贴保留文字，格式用工具栏调整。
 
 「切换模板」展示真实样例缩略图，可在经典单栏、简洁单栏和彩色双栏间切换。左侧跟随所选模板的 A4 纸张、页边距、字体、标题、经历排列及单双栏；两侧共用缩放比例，字号与图标按相同物理尺寸显示。双栏按相同章节分界。浏览器与 TeX 的断行算法仍有差异，多页边界和最终排版以右侧 PDF 为准。模板、全文字号与预期页数保存到工作区 `editor-settings.json`；Markdown 原稿保留内容、局部字号和图标大小，不包含上述全局设置。右上角可直接导出 PDF，「更多导出」提供 PNG 和 Markdown。PDF / PNG 只有当前内容和设置通过编译及校验后才启用；继续编辑会立即使旧下载过期并禁用。单页 PNG 直接下载，多页 PNG 打包为 ZIP。
 
-命令行也可以用 `build.py --template classic|minimal|two-column` 选择同一套模板。模板来源、适配范围和许可见 [模板说明](skills/latex-resume/references/templates.md)。
+命令行也可以用 `build.py --template classic|minimal|two-column` 选择同一套模板。模板来源、适配范围和许可见 [模板说明](skills/latex-resume/references/templates.md)。支持个人头像预留：在页眉中声明 `![avatar:photo.jpg]` 或在命令行指定 `--avatar photo.jpg`（支持 JPG / PNG / PDF），模板将自适应切换为双栏精致排版（左侧姓名与联系信息，右侧证件形象照）；若未指定头像，则优雅平滑退回单栏居中，绝无多余空白。
 
 「插入图标」可按名称或 ID 搜索本地 28 个图标，例如 GitHub；点击后在光标所在位置插入 `![logo:github]`。图标仅作装饰，应与文字名称同用，不代表任职、技能或品牌授权。详见 [图标来源与使用边界](skills/latex-resume/references/logos.md)。
 
-已随仓库附带 **28 个公司/技术 SVG 与 15 所学校校徽 SVG**，安装后即可在「插入图标」中搜索，无需单独下载。北京邮电大学可用「北邮」「北京邮电」或 `bupt` 查找；选择后在简历中点击图标，通过「图标大小」调整尺寸。
+已随仓库附带 **28 个公司/技术 SVG 与 15 所学校校徽 SVG**，安装后即可在「插入图标」中搜索，无需单独下载。北京邮电大学可用「北邮」「北京邮电」或 `bupt` 查找；选择后在简历中点击图标，通过「图标大小」调整尺寸。支持添加用户自定义 Logo：通过 `skills/latex-resume/scripts/add_custom_logo.py --file mylogo.svg [--id mycorp]` 校验并放入 `assets/logos/custom/`，即可在编辑器「自定义图标」或 Markdown `![logo:mycorp]` 中立即使用。
 
 公开学校素材来自固定版本的 [soulteary/china-university-icon](https://github.com/soulteary/china-university-icon)，保留集合许可、原作者署名、逐文件来源与校验值。集合许可不代表各学校授予商标使用权。未收录学校可由 agent 继续检索、核验并添加；来源不明或明确禁止转载的素材不应混入公开包。旧版下载器仍可用于本地补充，已有本地草稿和素材不会删除。更多来源和使用条件见 [校徽说明](skills/latex-resume/references/logos.md)。
 

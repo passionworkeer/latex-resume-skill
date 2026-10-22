@@ -46,3 +46,14 @@ The separate `university_sources` metadata contains 20 school discovery/download
 ```
 
 It verifies pinned hashes and SVG safety, stores downloads in ignored `assets/logos/local/`, and reports unsupported candidates individually. Bundled IDs take precedence over old local duplicates; existing local files are preserved. Optional local downloads retain their own source/rights status and are not automatically promoted into the public collection. Resume output includes used vector assets and the school rights/source records.
+
+## User-supplied custom logos
+
+Users can import custom company or project SVG marks:
+
+```sh
+.venv/bin/python skills/latex-resume/scripts/add_custom_logo.py \
+  --file path/to/my-logo.svg --id mycorp --name "My Company"
+```
+
+The script verifies XML safety (preventing active content, scripts, or external entities) and places the asset into `assets/logos/custom/mycorp.svg`. The logo catalogue automatically discovers it under category `custom` with storage `custom`. It can then be inserted directly in Markdown as `![logo:mycorp]` or selected from the visual editor under the "自定义图标" filter. During compilation, PyMuPDF converts it to a clean vector PDF in `output/logos/mycorp.pdf` without runtime network fetches.

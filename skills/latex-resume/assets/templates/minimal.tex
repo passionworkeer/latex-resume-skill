@@ -22,6 +22,22 @@
 \renewcommand{\textbf}[1]{{\color{stronggray}\originaltextbf{#1}}}
 \newcommand{\resumename}[1]{{\centering\fontsize{22}{27}\selectfont\bfseries\color{stronggray}#1\par}\vspace{2pt}}
 \newcommand{\contact}[1]{{\centering #1\par}\vspace{2pt}}
+\newcommand{\resumeheader}[3][]{%
+  \if\relax\detokenize{#1}\relax
+    {\centering\fontsize{22}{27}\selectfont\bfseries\color{stronggray}#2\par}\vspace{2pt}%
+    \if\relax\detokenize{#3}\relax\else{\centering #3\par}\vspace{2pt}\fi%
+  \else
+    \noindent
+    \begin{minipage}[c]{\dimexpr\textwidth-2.8cm\relax}
+      {\fontsize{22}{27}\selectfont\bfseries\color{stronggray}#2\par}\vspace{3pt}%
+      \if\relax\detokenize{#3}\relax\else #3\par\fi%
+    \end{minipage}\hfill
+    \begin{minipage}[c]{2.5cm}
+      \raggedleft
+      \includegraphics[width=2.4cm,height=3.0cm,keepaspectratio]{#1}
+    \end{minipage}\par\vspace{4pt}%
+  \fi
+}
 \newcommand{\entry}[3]{\par\vspace{4pt}\noindent\textbf{#1}\par #2\hfill #3\par\nopagebreak}
 \newcommand{\resumeicon}[2][10.5]{\raisebox{-1.5pt}{\includegraphics[height=#1pt,width=\dimexpr #1pt*8/3\relax,keepaspectratio]{logos/#2.pdf}}\hspace{3pt}}
 \hyphenpenalty=10000

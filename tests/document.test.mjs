@@ -14,3 +14,5 @@ test('excessive nested formatting fails explicitly',()=>{assert.throws(()=>parse
 test('legacy underscore and tilde remain literal',()=>{assert.equal(parse('HOME_#&%~^').content[0].content[0].text,'HOME_#&%~^');});
 
 test('entry links escape URL field delimiters',()=>{const doc=parse('### [A](https://example.com/a\\|b) | B | C');assert.deepEqual(parse(serialize(doc)),doc);});
+
+test('avatar block roundtrip',()=>{for(const line of ['![avatar:photo.png]','![avatar](photo.jpg)']){const doc=parse(`# 示例\n${line}\n后端开发`);assert.equal(doc.content[1].type,'avatar');assert.equal(doc.content[1].attrs.src,line.includes('png')?'photo.png':'photo.jpg');assert.deepEqual(parse(serialize(doc)),doc);}});

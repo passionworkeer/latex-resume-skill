@@ -84,6 +84,53 @@ class MarkdownTests(unittest.TestCase):
             with self.subTest(token=token), self.assertRaises(ValueError):
                 build.inline(token)
 
+    def test_avatar_support_in_markdown_and_templates(self):
+        source = '# 示例姓名\n![avatar:avatar.png]\n后端开发 | example@example.com | [个人主页](https://example.com)\n## 教育背景\n### 示例大学 | 软件工程 | 2021-2025\n'
+        tex, expected = build.convert(source)
+        self.assertIn(r'\resumeheader[avatar.png]{示例姓名}{后端开发 | example@example.com | \href{https://example.com}{个人主页}}', tex)
+        self.assertNotIn('avatar.png', expected)
+        self.assertNotIn('![avatar', expected)
+        self.assertIn('示例姓名', expected)
+        self.assertIn('个人主页', expected)
+        tex2, _ = build.convert('# 张三\n电话 | 邮箱\n## 经历\n- 工作', avatar='photo.jpg')
+        self.assertIn(r'\resumeheader[photo.jpg]{张三}{电话 | 邮箱}', tex2)
+        tex3, _ = build.convert('# 李四\n电话\n## 经历\n- 工作')
+        self.assertIn(r'\resumename{李四}', tex3)
+        self.assertIn(r'\contact{电话}', tex3)
+
+    def test_avatar_adversarial_validation_and_resolution(self):
+        import tempfile
+        from PIL import Image
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            workspace = root / 'workspace'
+            workspace.mkdir()
+            snapshots = workspace / 'snapshots'
+            snapshots.mkdir()
+            img = Image.new('RGB', (100, 100), color=(100, 150, 200))
+            avatar_file = workspace / 'photo.png'
+            img.save(avatar_file)
+
+            source_file = snapshots / 'build.md'
+            source_file.write_text('# 姓名\n![avatar:photo.png]\n电话\n## 经历\n- 工作\n', encoding='utf-8')
+            tex, _ = build.convert(source_file.read_text(encoding='utf-8'))
+            self.assertIn(r'\resumeheader[photo.png]', tex)
+
+            # Test parent directory resolution as done in main
+            avatar_src = Path('photo.png')
+            candidate = (source_file.parent / avatar_src).resolve()
+            self.assertFalse(candidate.is_file())
+            resolved = (source_file.parent.parent / avatar_src).resolve()
+            self.assertTrue(resolved.is_file())
+
+            # Test invalid formats are rejected
+            bad_file = workspace / 'script.sh'
+            bad_file.write_text('echo bad')
+            with self.assertRaises(ValueError):
+                ext = bad_file.suffix.lower()
+                if ext not in {'.png', '.jpg', '.jpeg', '.pdf'}:
+                    raise ValueError(f'Unsupported avatar format: {ext}')
+
     def test_whitespace_bullets_only_are_ignored(self):
         self.assertTrue(verify.compare('中文 A\nB', '中文 • A B')['exact_text_match'])
         for actual in ['中文 A', '中 A B', '中文 A B extra', '中文 A-B']:
@@ -145,6 +192,13 @@ class VerificationDiagnosticsTests(unittest.TestCase):
         self.assertTrue(all(not (self.directory / name).exists() for name in stale))
         self.assertTrue((self.directory / 'notes.txt').exists())
         self.assertTrue((self.directory / 'preview-custom.png').exists())
+
+    def test_cleanup_removes_generated_avatar(self):
+        (self.directory / 'avatar.png').write_bytes(b'fake png')
+        (self.directory / 'avatar.jpg').write_bytes(b'fake jpg')
+        build.clear_previous_results(self.directory, self.directory / 'input.md')
+        self.assertFalse((self.directory / 'avatar.png').exists())
+        self.assertFalse((self.directory / 'avatar.jpg').exists())
 
     def test_cleanup_never_removes_source_or_symlink_target(self):
         original = self.pdf.read_bytes()

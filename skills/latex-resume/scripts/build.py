@@ -141,7 +141,7 @@ def validate_font_size(value):
     return float(value)
 
 
-def convert(source, font_size=10.5, template_id='classic'):
+def convert(source, font_size=10.5, template_id='classic', avatar=None):
     from templates import get_template, column_split
     selected_template = get_template(template_id)
     font_size = validate_font_size(font_size)
@@ -150,6 +150,9 @@ def convert(source, font_size=10.5, template_id='classic'):
     in_list = False
     seen_name = False
     seen_section = False
+    name_value = None
+    contacts = []
+    detected_avatar = avatar
     for number, raw in enumerate(source.splitlines(), 1):
         line = raw.strip()
         if not line:
@@ -161,19 +164,31 @@ def convert(source, font_size=10.5, template_id='classic'):
                 body.append(r'\end{itemize}')
                 in_list = False
             if line.startswith('# '):
-                if seen_name or body:
+                if seen_name or body or contacts:
                     raise ValueError('Exactly one name heading must appear first')
-                value, visible = inline(line[2:])
-                body.append(r'\resumename{' + value + '}')
+                name_value, visible = inline(line[2:])
                 seen_name = True
             elif not seen_name:
                 raise ValueError('Start with # Name')
+            elif re.match(r'^!\[avatar(?::([^\]]+)\]|\]\(([^)]+)\))$', line):
+                if seen_section:
+                    raise ValueError('Avatar must appear in the header section before entries')
+                m = re.match(r'^!\[avatar(?::([^\]]+)\]|\]\(([^)]+)\))$', line)
+                detected_avatar = (m.group(1) or m.group(2)).strip()
+                continue
             elif line.startswith('## '):
+                if not seen_section:
+                    if detected_avatar:
+                        body.append(r'\resumeheader[' + detected_avatar + ']{' + (name_value or '') + '}{' + r' \par '.join(contacts) + '}')
+                    else:
+                        body.append(r'\resumename{' + (name_value or '') + '}')
+                        for c in contacts:
+                            body.append(r'\contact{' + c + '}')
+                    seen_section = True
                 value, visible = inline(line[3:])
                 section_starts.append(len(body))
                 section_weights.append(0)
                 body.append(r'\section{' + value + '}')
-                seen_section = True
             elif line.startswith('### '):
                 if not seen_section:
                     raise ValueError('Entry headings require a section')
@@ -195,7 +210,10 @@ def convert(source, font_size=10.5, template_id='classic'):
                 if re.match(r'^(#|[-+>]\s|\d+[.)]\s|:::|---|\|)', line):
                     raise ValueError('Unsupported block syntax')
                 value, visible = inline(line)
-                body.append((r'\contact{' + value + '}') if not seen_section else value + r'\par')
+                if not seen_section:
+                    contacts.append(value)
+                else:
+                    body.append(value + r'\par')
             if not visible.strip():
                 raise ValueError('Empty content')
             expected.append(visible)
@@ -205,6 +223,13 @@ def convert(source, font_size=10.5, template_id='classic'):
             raise ValueError(f'Line {number}: {exc}') from exc
     if not seen_name:
         raise ValueError('Start with # Name')
+    if not seen_section:
+        if detected_avatar:
+            body.append(r'\resumeheader[' + detected_avatar + ']{' + (name_value or '') + '}{' + r' \par '.join(contacts) + '}')
+        else:
+            body.append(r'\resumename{' + (name_value or '') + '}')
+            for c in contacts:
+                body.append(r'\contact{' + c + '}')
     if in_list:
         body.append(r'\end{itemize}')
     template = (ROOT / 'assets/templates' / selected_template['filename']).read_text(encoding='utf-8')
@@ -236,6 +261,8 @@ def clear_previous_results(out, source):
     paths = [out / name for name in names]
     paths.extend(p for p in out.glob('preview-*.png')
                  if re.fullmatch(r'preview-\d+\.png', p.name))
+    paths.extend(p for p in out.glob('avatar.*')
+                 if p.suffix.lower() in {'.png', '.jpg', '.jpeg', '.pdf'})
     if any(p.resolve() == source for p in paths):
         raise ValueError('Source must not be a generated output file')
     # Validate all candidates before mutating anything.
@@ -254,6 +281,7 @@ def main():
     parser.add_argument('--font-size', type=float, default=10.5)
     from templates import catalogue
     parser.add_argument('--template', choices=[item['id'] for item in catalogue()], default='classic')
+    parser.add_argument('--avatar', type=Path, default=None, help='Path to personal avatar image')
     parser.add_argument('--only-cached', action='store_true', help='Use only cached Tectonic resources')
     parser.add_argument('--bundle', default='https://data1b.fullyjustified.net/tlextras-2022.0r0.tar', help='Tectonic resource bundle URL or path')
     args = parser.parse_args()
@@ -266,7 +294,42 @@ def main():
         raise ValueError('--pages must be positive')
     out.mkdir(parents=True, exist_ok=True)
     clear_previous_results(out, source_path)
-    tex, expected = convert(args.source.read_text(encoding='utf-8'), args.font_size, args.template)
+    tex, expected = convert(args.source.read_text(encoding='utf-8'), args.font_size, args.template, avatar=str(args.avatar) if args.avatar else None)
+    m_avatar = re.search(r'\\resumeheader\[([^\]]+)\]', tex)
+    if m_avatar:
+        avatar_ref = m_avatar.group(1).strip()
+        avatar_src = Path(avatar_ref)
+        if not avatar_src.is_absolute():
+            candidate = (source_path.parent / avatar_src).resolve()
+            if candidate.is_file():
+                avatar_src = candidate
+            elif (source_path.parent.parent / avatar_src).resolve().is_file():
+                avatar_src = (source_path.parent.parent / avatar_src).resolve()
+            elif (Path.cwd() / avatar_ref).is_file():
+                avatar_src = (Path.cwd() / avatar_ref).resolve()
+            elif (ROOT / 'assets' / avatar_ref).is_file():
+                avatar_src = (ROOT / 'assets' / avatar_ref).resolve()
+            else:
+                raise ValueError(f'Avatar image not found: {avatar_ref}')
+        elif not avatar_src.is_file():
+            raise ValueError(f'Avatar image not found: {avatar_ref}')
+        ext = avatar_src.suffix.lower()
+        if ext not in {'.png', '.jpg', '.jpeg', '.pdf'}:
+            raise ValueError(f'Unsupported avatar format: {ext}; use PNG, JPG, or PDF')
+        if avatar_src.stat().st_size > 15_000_000:
+            raise ValueError('Avatar file exceeds maximum size limit (15 MB)')
+        try:
+            import fitz
+            with fitz.open(avatar_src) as doc:
+                if len(doc) < 1:
+                    raise ValueError('Avatar image or PDF is empty')
+        except Exception as exc:
+            raise ValueError(f'Invalid or unreadable avatar image: {exc}') from exc
+        dest_avatar = out / avatar_src.name
+        if avatar_src.resolve() != dest_avatar.resolve():
+            shutil.copyfile(avatar_src, dest_avatar)
+        if avatar_ref != avatar_src.name:
+            tex = tex.replace(f'[{avatar_ref}]', f'[{avatar_src.name}]')
     (out / 'resume.tex').write_text(tex, encoding='utf-8')
     (out / 'expected-text.txt').write_text(expected, encoding='utf-8')
     fonts = ROOT / 'assets/fonts'
